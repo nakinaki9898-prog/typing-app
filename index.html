@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>英単語タイピング練習</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 50px; }
+    #word { font-size: 2em; margin: 20px; }
+    #meaning { font-size: 2em; color: #555; margin-bottom: 20px; }
+    input { font-size: 1.5em; padding: 10px; width: 300px; }
+    #result { margin-top: 20px; font-weight: bold; }
+    #resetBtn { display:none; margin-top:20px; font-size:1.2em; padding:5px 10px; }
+    #levelSelect button { font-size:1.2em; padding:5px 10px; margin:5px; }
+  </style>
+</head>
+<body>
+  <h1>英単語タイピング練習</h1>
+
+  <!-- LEVEL選択 -->
+  <div id="levelSelect">
+    <h2>レベルを選択してください</h2>
+    <button onclick="startGame(1)">LEVEL 1</button>
+    <button onclick="startGame(2)">LEVEL 2</button>
+    <button onclick="startGame(3)">LEVEL 3</button>
+    <button onclick="startGame(4)">LEVEL 4</button>
+    <button onclick="startGame(5)">LEVEL 5</button>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="game" style="display:none;">
+    <div id="word"></div>
+    <div id="meaning"></div>
+    <input type="text" id="input" autocomplete="off" placeholder="ここに入力">
+    <div id="result"></div>
+    <button id="resetBtn">リセット</button>
+  </div>
+
+  <!-- 効果音 -->
+  <audio id="typeSound" src="https://www.soundjay.com/button/sounds/button-16.mp3"></audio>
+  <audio id="errorSound" src="https://www.soundjay.com/button/sounds/beep-07.mp3"></audio>
+  <audio id="correctSound" src="https://www.soundjay.com/button/sounds/button-10.mp3"></audio>
+
+  <script>
+    let words = [];
+    let index = 0;
+    let correct = 0;
+    let mistypes = 0;
+    let typed = "";
+    let level = 1;
+    let mistypeCountPerLetter = 0;
+
+    const wordDiv = document.getElementById("word");
+    const meaningDiv = document.getElementById("meaning");
+    const input = document.getElementById("input");
+    const result = document.getElementById("result");
+    const resetBtn = document.getElementById("resetBtn");
+    const levelSelectDiv = document.getElementById("levelSelect");
+    const gameDiv = document.getElementById("game");
+
+    const typeSound = document.getElementById("typeSound");
+    const errorSound = document.getElementById("errorSound");
+    const correctSound = document.getElementById("correctSound");
+
+    // LEVEL選択後にCSV読み込み
+    function startGame(selectedLevel) {
+      level = selectedLevel;
+      levelSelectDiv.style.display = "none";
+      gameDiv.style.display = "block";
+
+      const csvFile = `words_level${level}.csv`;
+      fetch(csvFile)
+        .then(response => response.text())
+        .then(data => {
+          const lines = data.trim().split("\n");
+          words = lines.map(line => {
+            const parts = line.split(",");
+            return { en: parts[0].trim(), jp: parts[1].trim() };
+          });
+
+          index = 0; correct = 0; mistypes = 0; typed = ""; mistypeCountPerLetter = 0;
+          showWord();
+          input.focus();
+        })
+        .catch(error => {
+          console.error("CSV読み込みエラー:", error);
+          alert("単語データの読み込みに失敗しました。");
+        });
+    }
+
+    function showWord() {
+      if (index < words.length) {
+        typed = ""; mistypeCountPerLetter = 0;
+        wordDiv.innerHTML = "";
+        meaningDiv.textContent = words[index].jp;
+        input.value = ""; input.disabled = false; input.focus();
+        resetBtn.style.display = "none";
+        result.textContent = "";
+      } else {
+        wordDiv.textContent = "終了！";
+        meaningDiv.textContent = "";
+        result.textContent = `正解数：${correct} / ${words.length} | 総ミスタイプ数：${mistypes}`;
+        input.disabled = true;
+        resetBtn.style.display = "inline-block";
+      }
+    }
+
+    input.addEventListener("input", () => {
+      const currentWord = words[index].en;
+      if (typed.length >= currentWord.length) return;
+
+      const pos = typed.length;
+      const correctChar = currentWord[pos];
+      const inputChar = input.value[input.value.length - 1];
+      let errorChar = "";
+
+      if (inputChar === correctChar) {
+        // 正解
+        typed += correctChar;
+        mistypeCountPerLetter = 0;
+        typeSound.currentTime = 0;
+        typeSound.play();
+      } else {
+        // 間違い
+        mistypes++;
+        mistypeCountPerLetter++;
+        if (mistypeCountPerLetter >= 3) {
+          // 3回間違えたら正しい文字を表示
+          typed += correctChar;
+          mistypeCountPerLetter = 0;
+        } else {
+          // 赤文字で間違いを表示
+          errorChar = inputChar;
+          errorSound.currentTime = 0;
+          errorSound.play();
+        }
+      }
+
+      // 英単語欄に typed + 赤文字（もしあれば）を表示
+      wordDiv.innerHTML = typed + (errorChar ? `<span style="color:red;">${errorChar}</span>` : "");
+
+      // 単語正解
+      if (typed === currentWord) {
+        correct++; index++; input.disabled = true;
+        correctSound.currentTime = 0;
+        correctSound.play();
+        setTimeout(() => showWord(), 1000);
+      }
+
+      // 入力欄は空に戻す
+      input.value = "";
+    });
+
+    resetBtn.addEventListener("click", () => {
+      gameDiv.style.display = "none";
+      levelSelectDiv.style.display = "block";
+    });
+  </script>
+</body>
+</html>
+
