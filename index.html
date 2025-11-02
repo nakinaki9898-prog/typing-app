@@ -4,11 +4,9 @@
 <meta charset="UTF-8">
 <title>英単語タイピング（中学生）</title>
 
-<!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Mochiy+Pop+One&display=swap" rel="stylesheet">
 
 <style>
-/* 基礎レイアウト */
 body {
   font-family: 'Noto Sans JP', sans-serif;
   margin: 0;
@@ -34,7 +32,7 @@ h1 {
   font-family: 'Mochiy Pop One', sans-serif;
 }
 
-/* レベル選択 */
+/* レベル */
 #levelButtons {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -67,7 +65,7 @@ input {
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
 .wrong { color:red; font-weight:bold; }
 
-/* === 背景（必ず反映版） === */
+/* 背景 */
 #bg {
   background-color: #e8f3ff !important;
   background-image:
@@ -81,14 +79,14 @@ input {
 
 <body id="bg">
 
-<!-- レベル選択画面 -->
+<!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
 
-<!-- ゲーム画面 -->
+<!-- ゲーム -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
   <div>経過時間: <span id="timer">0</span> 秒</div>
@@ -97,14 +95,14 @@ input {
 
   <input id="input"
     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin"
-    placeholder="入力してください">
+    placeholder="ここに入力">
 
   <div id="result"></div>
   <button onclick="toggleSound()" id="soundBtn">🔊 音 ON</button>
   <button onclick="resetGame()">リセット</button>
 </div>
 
-<!-- 結果画面 -->
+<!-- 結果 -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
@@ -113,7 +111,7 @@ input {
 
 <script>
 let words=[], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
-let wrongWords=[];   // ←追加：間違えた単語リスト
+let wrongWords=[];
 let timeElapsed=0, timerInterval;
 
 const jpDiv=document.getElementById("jp");
@@ -148,7 +146,7 @@ function startTimer(){
   },1000);
 }
 
-/* レベルボタン作成 */
+// レベルボタン生成
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=30;i++){
   const b=document.createElement("button");
@@ -192,7 +190,6 @@ function finishGame(){
   const wpm=Math.round(correct/(timeElapsed/60));
   finalScore.textContent=`正解数：${correct} / 時間：${timeElapsed}秒 / WPM：${wpm}`;
 
-  // 🔁 復習ボタン（間違えた単語がある場合のみ）
   if (wrongWords.length > 0) {
     const retryBtn=document.createElement("button");
     retryBtn.textContent="間違えた単語を復習";
@@ -216,7 +213,7 @@ function retryWrongWords(){
 document.addEventListener("touchstart",()=>input.focus());
 document.addEventListener("keydown",()=>{ if(document.activeElement!==input) input.focus(); });
 
-/* タイピング判定 */
+/* 入力判定 */
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
   e.preventDefault();
@@ -228,12 +225,10 @@ input.addEventListener("keydown",e=>{
     currentPos++; wrongCount=0;
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     if(currentPos===cur.length){
-      // ✅ 間違えた単語を記録
       if (wrongCount > 0) wrongWords.push(words[index]);
 
       correct++; playCorrect(); speak(cur);
-      index++;
-      setTimeout(showWord,1000);
+      index++; setTimeout(showWord,1000);
     }
     return;
   }
