@@ -72,13 +72,19 @@ const wordDiv = document.getElementById("word");
 const input = document.getElementById("input");
 const result = document.getElementById("result");
 
-function tone(freq = 440, duration = 0.15, type = "sine") {
+function tone(freq = 440, duration = 0.15, type = "sine", volume = 0.15) {
   if(!soundOn) return;
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
   osc.type = type;
   osc.frequency.value = freq;
-  osc.connect(ctx.destination);
+  gain.gain.value = 0.03; // ★ とても静か
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
   osc.start();
   osc.stop(ctx.currentTime + duration);
 }
