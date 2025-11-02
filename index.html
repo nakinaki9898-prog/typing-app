@@ -4,48 +4,67 @@
 <meta charset="UTF-8">
 <title>英単語タイピング（中学生）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+
+<!-- タイトルポップフォント -->
+<link href="https://fonts.googleapis.com/css2?family=Mochiy+Pop+One&display=swap" rel="stylesheet">
+
 <style>
 body {
   font-family: 'Noto Sans JP', sans-serif;
-  background: #e8f3ff;
+  background-color: #e8f3ff;
   background-image:
-    url("https://cdn.jsdelivr.net/gh/naokishibuya/public-images/notes.png"),
-    url("https://cdn.jsdelivr.net/gh/naokishibuya/public-images/pencil.png"),
-    url("https://cdn.jsdelivr.net/gh/naokishibuya/public-images/books.png"),
-    url("https://cdn.jsdelivr.net/gh/naokishibuya/public-images/stars.png");
+    url("https://cdn.jsdelivr.net/gh/TypistAI/edu-icons/notebook.png"),
+    url("https://cdn.jsdelivr.net/gh/TypistAI/edu-icons/pencil.png"),
+    url("https://cdn.jsdelivr.net/gh/TypistAI/edu-icons/book.png"),
+    url("https://cdn.jsdelivr.net/gh/TypistAI/edu-icons/abc.png"),
+    url("https://cdn.jsdelivr.net/gh/TypistAI/edu-icons/123.png");
   background-repeat: repeat;
-  background-size: 150px, 150px, 200px, 120px;
+  background-size: 140px, 120px, 160px, 140px, 120px;
+  background-position: center;
+  
   display: flex; justify-content: center; align-items: center;
   height: 100vh; margin: 0;
 }
+
 .card {
   background: rgba(255,255,255,0.95);
   border-radius: 20px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   padding: 40px; text-align: center; width: 90%; max-width: 500px;
 }
-h1 { color:#1976d2; margin-bottom:20px; }
+
+h1 {
+  color:#1976d2;
+  font-family: 'Mochiy Pop One', sans-serif;
+  margin-bottom:20px;
+}
+
 button {
   background:#1976d2; color:white; border:none; padding:10px 25px;
   border-radius:10px; cursor:pointer; margin:5px; font-size:1em;
 }
 button:hover { background:#0d47a1; }
+
 #jp { font-size:1.5em; margin:15px 0; }
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
+
 input {
   width:80%; padding:10px; font-size:1.2em;
   border:2px solid #90caf9; border-radius:10px;
 }
+
 #result { font-size:1.2em; height:40px; }
-.wrong{color:red;font-weight:bold;}
+.wrong{ color:red; font-weight:bold; }
+
+/* 30レベルボタン */
 #levelButtons {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 10px; margin-top: 20px;
+  display:grid;
+  grid-template-columns:repeat(5, 1fr);
+  gap:10px; margin-top:20px;
 }
 .level-btn {
-  background:#1976d2; color:white;
-  padding:10px; border-radius:10px; cursor:pointer; font-size:1.1em;
+  background:#1976d2; color:white; padding:10px;
+  border-radius:10px; cursor:pointer; font-size:1.1em;
 }
 .level-btn:hover { background:#0d47a1; }
 </style>
@@ -54,25 +73,24 @@ input {
 
 <!-- LEVEL SELECT -->
 <div class="card" id="menu">
-  <h1 style="font-size:2em; margin-bottom:10px;">英単語タイピング（中学生）</h1>
-  <h2 style="margin-top:0;">レベル選択</h2>
+  <h1>英単語タイピング（中学生）</h1>
+  <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
 
 <!-- GAME -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
+
   <div>経過時間: <span id="timer">0</span> 秒</div>
   <div id="jp"></div>
   <div id="word"></div>
+  
   <input id="input"
-    autocomplete="off"
-    autocorrect="off"
-    autocapitalize="off"
-    spellcheck="false"
-    inputmode="latin"
-    placeholder="入力してください"
-  >
+    autocomplete="off" autocorrect="off" autocapitalize="off"
+    spellcheck="false" inputmode="latin"
+    placeholder="入力してください">
+    
   <div id="result"></div>
   <button onclick="toggleSound()" id="soundBtn">🔊 音 ON</button>
   <button onclick="resetGame()">リセット</button>
@@ -86,7 +104,7 @@ input {
 </div>
 
 <script>
-let words=[], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
+let words = [], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
 let timeElapsed=0, timerInterval;
 
 const jpDiv=document.getElementById("jp");
@@ -94,7 +112,7 @@ const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
 const result=document.getElementById("result");
 
-/*** ★ 効果音 (小音量) ***/
+/* 小音量効果音 */
 function tone(f=440,d=0.15,t="sine"){
   if(!soundOn) return;
   const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -105,19 +123,16 @@ function tone(f=440,d=0.15,t="sine"){
 }
 function playCorrect(){ tone(880,0.12); tone(1100,0.12); }
 function playWrong(){ tone(200,0.15,"square"); }
-function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2,"triangle"),200); setTimeout(()=>tone(880,0.2,"triangle"),400); }
-function playStart(){ tone(600,0.12,"sine"); tone(900,0.12,"sine"); }
-
-/*** 発音 ***/
-function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
-
-/*** ボリュームボタン ***/
-function toggleSound(){
-  soundOn=!soundOn;
-  document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF";
+function playFinish(){
+  tone(440,0.2,"triangle");
+  setTimeout(()=>tone(660,0.2,"triangle"),200);
+  setTimeout(()=>tone(880,0.2,"triangle"),400);
 }
+function playStart(){ tone(600,0.12); tone(900,0.12); }
 
-/*** タイマー ***/
+function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
+function toggleSound(){ soundOn=!soundOn; soundBtn.textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
+
 function startTimer(){
   timerInterval=setInterval(()=>{
     timeElapsed++;
@@ -125,7 +140,7 @@ function startTimer(){
   },1000);
 }
 
-/*** レベルボタン生成 ***/
+/* レベルボタン作成 */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=30;i++){
   const btn=document.createElement("button");
@@ -134,11 +149,11 @@ for(let i=1;i<=30;i++){
   levelButtons.appendChild(btn);
 }
 
-/*** ゲーム開始 + スタート音 ***/
+/* ゲーム開始 */
 function startGame(level){
-  playStart();  /* ← ★スタート音 */
-  document.getElementById("menu").style.display="none";
-  document.getElementById("game").style.display="block";
+  playStart();
+  menu.style.display="none";
+  game.style.display="block";
 
   fetch(`words_level${level}.csv`)
   .then(r=>r.text())
@@ -147,12 +162,13 @@ function startGame(level){
       const [en,jp]=l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
       return {en,jp};
     }).sort(()=>Math.random()-0.5);
+
     showWord(); startTimer();
   })
   .catch(()=>alert("CSV読み込みエラー"));
 }
 
-/*** 単語表示 ***/
+/* 単語表示 */
 function showWord(){
   if(index>=words.length) return finishGame();
   const {en,jp}=words[index];
@@ -161,29 +177,28 @@ function showWord(){
   input.focus();
 }
 
-/*** 終了 ***/
+/* 終了画面 */
 function finishGame(){
   clearInterval(timerInterval);
   playFinish();
-  document.getElementById("game").style.display="none";
-  document.getElementById("resultCard").style.display="block";
+  game.style.display="none";
+  resultCard.style.display="block";
   const wpm=Math.round(correct/(timeElapsed/60));
-  document.getElementById("finalScore").textContent=
-  `正解数：${correct}語 / 時間：${timeElapsed}秒 / WPM：${wpm}`;
+  finalScore.textContent=`正解数：${correct}語 / 時間：${timeElapsed}秒 / WPM：${wpm}`;
 }
 
-/*** 自動フォーカス（スマホ対応強化） ***/
-document.addEventListener("touchstart",()=>input.focus());
-document.addEventListener("keydown",()=>{ if(document.activeElement!==input) input.focus(); });
+function resetGame(){ location.reload(); }
 
-/*** タイピング判定 ***/
+/* スマホフォーカス */
+document.addEventListener("touchstart", ()=>input.focus());
+document.addEventListener("keydown", ()=>{ if(document.activeElement!==input) input.focus(); });
+
+/* タイピング判定 */
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
   e.preventDefault();
-
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
-
   const correctChar=cur[currentPos];
 
   if(e.key===correctChar){
@@ -206,9 +221,6 @@ input.addEventListener("keydown",e=>{
       `<span style="color:red;">${correctChar}</span>`;
   }
 });
-
-/*** リセット ***/
-function resetGame(){ location.reload(); }
 </script>
 </body>
 </html>
