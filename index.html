@@ -16,6 +16,7 @@ body {
   min-height: 100vh;
 }
 
+/* カード */
 .card {
   background: rgba(255,255,255,0.92);
   border-radius: 20px;
@@ -31,46 +32,42 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* レベル選択 */
 #levelButtons {
   display: grid;
   grid-template-columns: repeat(5,1fr);
   gap: 10px;
 }
-
 .level-btn {
   background:#1976d2; color:#fff;
-  padding:10px; border-radius:10px;
-  border:none; cursor:pointer; font-size:1.1em;
+  padding:10px; border-radius:10px; border:none;
+  cursor:pointer; font-size:1.1em;
 }
-
 .level-btn:hover { background:#0d47a1; }
 
+/* ボタン */
 button {
   background:#1976d2; color:white;
   padding:10px 24px;
-  border-radius:10px;
-  border:none;
-  cursor:pointer;
-  margin-top: 8px;
+  border-radius:10px; border:none;
+  cursor:pointer; margin-top: 8px;
 }
-
 button:hover { background:#0d47a1; }
 
+/* 入力欄 */
 input {
   width:80%; padding:10px; font-size:1.2em;
   border:2px solid #90caf9; border-radius:10px;
 }
 
+/* 表示領域 */
 #jp { font-size:1.5em; margin:15px 0; }
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
 
-#result {
-  height: 24px; /* ← ミス！表示スペース固定 */
-  margin-top: 6px;
-}
-
+#result { height: 24px; margin-top: 6px; }
 .wrong { color:red; font-weight:bold; }
 
+/* 背景 */
 #bg {
   background-color:#e8f3ff !important;
   background-image:url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNjAnIGhlaWdodD0nNjAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzYwJyBoZWlnaHQ9JzYwJyBmaWxsPSIjZWZmNyIvPjxnIGZpbGw9IiNhOGNkZmYiIGZpbGwtb3BhY2l0eT0iMC40Ij48Y2lyY2xlIGN4PSIxNSIgY3k9IjE0IiByPSI0Ii8+PHJlY3QgeD0iMzAiIHk9IjMxIiB3aWR0aD0iOCIgaGVpZ2h0PSIzIi8+PC9nPjx0ZXh0IHg9IjE4IiB5PSI0NyIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2E2YTZhNiI+QUJDPjwvdGV4dD48L3N2Zz4=");
@@ -81,12 +78,14 @@ input {
 
 <body id="bg">
 
+<!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
 
+<!-- ゲーム -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
   <div>経過時間: <span id="timer">0</span> 秒</div>
@@ -97,7 +96,6 @@ input {
     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin"
     placeholder="ここに入力">
 
-  <!-- ✅ 答えボタン -->
   <button onclick="showAnswer()" style="background:#ff9800; margin-top:6px;">答えを見る</button>
 
   <div id="result"></div>
@@ -106,27 +104,29 @@ input {
   <button onclick="resetGame()">リセット</button>
 </div>
 
+<!-- 結果 -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
-  <div id="resultActions">
-    <button onclick="location.reload()">メニューへ</button>
-  </div>
+  <div id="resultActions"><button onclick="location.reload()">メニューへ</button></div>
 </div>
 
 <script>
-let words=[], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
-let wrongWords=[], hintShown=false;
-let timeElapsed=0, timerInterval=null;
+/* 状態 */
+let words=[], index=0, correct=0, currentPos=0, wrongCount=0;
+let wrongWords=[], hintShown=false, answerShown=false;
+let soundOn=true, timeElapsed=0, timerInterval=null;
 
+/* DOM */
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
 const result=document.getElementById("result");
-const resultActions=document.getElementById("resultActions");
 const menu=document.getElementById("menu");
 const game=document.getElementById("game");
+const resultActions=document.getElementById("resultActions");
 
+/* 音 */
 function tone(f=440,d=0.15,t="sine"){
   if(!soundOn) return;
   const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -137,10 +137,11 @@ function tone(f=440,d=0.15,t="sine"){
 }
 function playCorrect(){ tone(880,0.12); tone(1100,0.12); }
 function playWrong(){ tone(200,0.15,"square"); }
-function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2,"triangle"),200); setTimeout(()=>tone(880,0.2,"triangle"),400); }
+function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2),200); setTimeout(()=>tone(880,0.2),400); }
 function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
 function toggleSound(){ soundOn=!soundOn; soundBtn.textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
 
+/* タイマー */
 function startTimer(){
   clearInterval(timerInterval);
   timeElapsed=0; document.getElementById("timer").textContent=timeElapsed;
@@ -148,6 +149,7 @@ function startTimer(){
 }
 function stopTimer(){ clearInterval(timerInterval); }
 
+/* レベルボタン作成 */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=30;i++){
   const b=document.createElement("button");
@@ -156,40 +158,51 @@ for(let i=1;i<=30;i++){
   levelButtons.appendChild(b);
 }
 
+/* ゲーム開始 */
 function startGame(level){
-  menu.style.display="none"; game.style.display="block";
+  menu.style.display="none";
+  game.style.display="block";
   stopTimer();
+
   fetch(`words_level${level}.csv`)
-  .then(r=>r.text())
-  .then(t=>{
-    words=t.trim().split("\n").map(l=>{
-      const [en,jp]=l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
-      return {en,jp};
-    }).sort(()=>Math.random()-0.5);
-    index=0; correct=0; wrongWords=[];
-    showWord(); startTimer();
-  })
-  .catch(()=>alert("CSV読み込みエラー"));
+    .then(r=>r.text())
+    .then(t=>{
+      words=t.trim().split("\n").map(l=>{
+        const [en,jp]=l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
+        return {en,jp};
+      }).sort(()=>Math.random()-0.5);
+
+      index=0; correct=0; wrongWords=[];
+      showWord(); startTimer();
+    })
+    .catch(()=>alert("CSV読み込みエラー"));
 }
 
+/* 単語表示 */
 function showWord(){
   if(index>=words.length) return finishGame();
   jpDiv.textContent=words[index].jp;
   wordDiv.textContent=""; input.value="";
-  currentPos=0; wrongCount=0; hintShown=false;
+  currentPos=0; wrongCount=0; hintShown=false; answerShown=false;
   input.focus();
 }
 
+/* ✅ 答え表示 */
 function showAnswer(){
   const cur=words[index].en;
   wordDiv.innerHTML=`<span style="color:#1976d2">${cur}</span>`;
-  hintShown=true; speak(cur);
+  hintShown=true;
+  answerShown=true;   /* ← 入力処理用フラグ */
+  speak(cur);
 }
 
+/* 終了 */
 function finishGame(){
   stopTimer();
   playFinish();
-  game.style.display="none"; resultCard.style.display="block";
+  game.style.display="none";
+  resultCard.style.display="block";
+
   const wpm=Math.max(0, Math.round(correct/(Math.max(1,timeElapsed)/60)));
   finalScore.textContent=`正解数：${correct} / 時間：${timeElapsed}秒 / WPM：${wpm}`;
 
@@ -202,6 +215,7 @@ function finishGame(){
   }
 }
 
+/* 復習 */
 function retryWrongWords(){
   words=[...wrongWords]; wrongWords=[];
   index=0; correct=0;
@@ -209,28 +223,41 @@ function retryWrongWords(){
   startTimer(); showWord();
 }
 
+/* リセット */
 function resetGame(){ location.reload(); }
 
+/* タイプ処理 */
 document.addEventListener("keydown",()=>{ if(document.activeElement!==input) input.focus(); });
 
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
   e.preventDefault();
+
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
   const need=cur[currentPos];
 
+  /* ✅ 答え見た後 → 最初の入力で答え表示を消して通常進行へ */
+  if(answerShown){
+    answerShown=false;
+    wordDiv.textContent="";
+  }
+
+  /* 正解 */
   if(e.key===need){
     currentPos++; wrongCount=0;
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
+
     if(currentPos===cur.length){
       if(wrongCount>0 || hintShown) wrongWords.push(words[index]);
       correct++; speak(cur);
-      index++; setTimeout(showWord,1000);
+      index++;
+      setTimeout(showWord,1000);
     }
     return;
   }
 
+  /* ミス */
   wrongCount++; result.innerHTML="<span class='wrong'>ミス！</span>";
   setTimeout(()=>result.textContent="",300);
   playWrong();
