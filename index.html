@@ -54,10 +54,12 @@ button {
 }
 button:hover { background:#0d47a1; }
 
-/* 入力欄 */
+/* 入力欄（フォーカス用のダミー。タイプはdocumentで拾う） */
 input {
   width:80%; padding:10px; font-size:1.2em;
   border:2px solid #90caf9; border-radius:10px;
+  caret-color: transparent; /* キャレット非表示 */
+  user-select: none;
 }
 
 /* 表示領域 */
@@ -92,9 +94,10 @@ input {
   <div id="jp"></div>
   <div id="word"></div>
 
-  <input id="input"
+  <!-- readonly：ここに文字は入らない。フォーカス用 -->
+  <input id="input" readonly
     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin"
-    placeholder="ここに入力">
+    placeholder="ここに入力（キーボードでタイプ）">
 
   <button onclick="showAnswer()" style="background:#ff9800; margin-top:6px;">答えを見る</button>
 
@@ -182,17 +185,17 @@ function startGame(level){
 function showWord(){
   if(index>=words.length) return finishGame();
   jpDiv.textContent=words[index].jp;
-  wordDiv.textContent=""; input.value="";
+  wordDiv.textContent=""; // 表示をクリア
   currentPos=0; wrongCount=0; hintShown=false; answerShown=false;
-  input.focus();
+  input.value=""; input.focus();
 }
 
-/* ✅ 答え表示 */
+/* 答えを見る（全文表示・復習対象に） */
 function showAnswer(){
   const cur=words[index].en;
   wordDiv.innerHTML=`<span style="color:#1976d2">${cur}</span>`;
   hintShown=true;
-  answerShown=true;   /* ← 入力処理用フラグ */
+  answerShown=true;   // 最初の入力で表示を消すためのフラグ
   speak(cur);
 }
 
@@ -226,48 +229,55 @@ function retryWrongWords(){
 /* リセット */
 function resetGame(){ location.reload(); }
 
-/* タイプ処理 */
-document.addEventListener("keydown",()=>{ if(document.activeElement!==input) input.focus(); });
+/* ====== タイプ処理（画面全体で拾う） ====== */
+document.addEventListener("keydown",(e)=>{
+  // ゲーム中のみ処理
+  if(game.style.display==="none") return;
 
-input.addEventListener("keydown",e=>{
-  if(e.key.length!==1) return;
-  e.preventDefault();
+  const key=e.key;
+  if(key.length!==1) return;            // 文字以外無視
+  e.preventDefault();                   // 入力欄に文字が入るのを防止
 
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
-  const need=cur[currentPos];
 
-  /* ✅ 答え見た後 → 最初の入力で答え表示を消して通常進行へ */
+  const typed=key.toLowerCase();
+  const need=cur[currentPos].toLowerCase();
+
+  // 答え表示中は、最初の入力で表示を消す
   if(answerShown){
     answerShown=false;
     wordDiv.textContent="";
   }
 
-  /* 正解 */
-  if(e.key===need){
+  if(typed===need){
     currentPos++; wrongCount=0;
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
-
     if(currentPos===cur.length){
       if(wrongCount>0 || hintShown) wrongWords.push(words[index]);
       correct++; speak(cur);
-      index++;
-      setTimeout(showWord,1000);
+      index++; setTimeout(showWord,1000);
     }
     return;
   }
 
-  /* ミス */
+  // ミス
   wrongCount++; result.innerHTML="<span class='wrong'>ミス！</span>";
   setTimeout(()=>result.textContent="",300);
   playWrong();
 
+  // 3回以上で1文字ヒント
   if(wrongCount>=3){
     wordDiv.innerHTML=
       `<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`+
-      `<span style="color:red">${need}</span>`;
+      `<span style="color:red">${cur[currentPos]}</span>`;
   }
 });
+
+/* フォーカス維持（クリック不要でタイプ可） */
+document.addEventListener("click",()=>input.focus());
+document.addEventListener("touchstart",()=>input.focus());
+document.addEventListener("mousemove",()=>{ if(document.activeElement!==input) input.focus(); });
 </script>
 </body>
 </html>
