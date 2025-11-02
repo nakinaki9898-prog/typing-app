@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Mochiy+Pop+One&display=swap" rel="stylesheet">
 
 <style>
-/* ★ 最低限のbody設定（背景は #bg で強制上書き） */
+/* 基礎レイアウト */
 body {
   font-family: 'Noto Sans JP', sans-serif;
   margin: 0;
@@ -18,7 +18,7 @@ body {
   height: 100vh;
 }
 
-/* ★ カードデザイン */
+/* カード */
 .card {
   background: rgba(255,255,255,0.92);
   border-radius: 20px;
@@ -28,12 +28,13 @@ body {
   width: 90%;
   max-width: 480px;
 }
+
 h1 { 
   color:#1976d2;
   font-family: 'Mochiy Pop One', sans-serif;
 }
 
-/* level buttons grid */
+/* レベル選択 */
 #levelButtons {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -46,22 +47,27 @@ h1 {
 }
 .level-btn:hover { background:#0d47a1; }
 
+/* ボタン */
 button {
   background:#1976d2; color:white;
   padding:10px 25px; border-radius:10px;
   cursor:pointer; border:none; 
+  margin-top: 10px;
 }
 button:hover { background:#0d47a1; }
 
+/* 入力欄 */
 input {
   width:80%; padding:10px; font-size:1.2em;
   border:2px solid #90caf9; border-radius:10px;
 }
+
+/* 単語表示 */
 #jp { font-size:1.5em; margin:15px 0; }
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
 .wrong { color:red; font-weight:bold; }
 
-/* === ★背景を絶対に反映させる === */
+/* === 背景（必ず反映版） === */
 #bg {
   background-color: #e8f3ff !important;
   background-image:
@@ -73,21 +79,16 @@ input {
 </style>
 </head>
 
-<body style="
-  background-color:#e8f3ff;
-  background-image:url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0nNjAnIGhlaWdodD0nNjAnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zyc+PHJlY3Qgd2lkdGg9JzYwJyBoZWlnaHQ9JzYwJyBmaWxsPSIjZWZmNyIvPjxnIGZpbGw9IiNhOGNkZmYiIGZpbGwtb3BhY2l0eT0iMC40Ij48Y2lyY2xlIGN4PSIxNSIgY3k9IjE0IiByPSI0Ii8+PHJlY3QgeD0iMzAiIHk9IjMxIiB3aWR0aD0iOCIgaGVpZ2h0PSIzIi8+PC9nPjx0ZXh0IHg9IjE4IiB5PSI0NyIgZm9udC1zaXplPSIxMCIgZmlsbD0iI2E2YTZhNiI+QUJDPjwvdGV4dD48L3N2Zz4=');
-  background-repeat:repeat;
-  background-size:140px;
-">
+<body id="bg">
 
-<!-- LEVEL SELECT -->
+<!-- レベル選択画面 -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
 
-<!-- GAME -->
+<!-- ゲーム画面 -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
   <div>経過時間: <span id="timer">0</span> 秒</div>
@@ -96,14 +97,14 @@ input {
 
   <input id="input"
     autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="latin"
-    placeholder="ここに入力">
+    placeholder="入力してください">
 
   <div id="result"></div>
   <button onclick="toggleSound()" id="soundBtn">🔊 音 ON</button>
   <button onclick="resetGame()">リセット</button>
 </div>
 
-<!-- RESULT -->
+<!-- 結果画面 -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
@@ -112,7 +113,9 @@ input {
 
 <script>
 let words=[], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
+let wrongWords=[];   // ←追加：間違えた単語リスト
 let timeElapsed=0, timerInterval;
+
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
@@ -128,17 +131,24 @@ function tone(f=440,d=0.15,t="sine"){
 }
 function playCorrect(){ tone(880,0.12); tone(1100,0.12); }
 function playWrong(){ tone(200,0.15,"square"); }
-function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2,"triangle"),200); setTimeout(()=>tone(880,0.2,"triangle"),400);}
+function playFinish(){
+  tone(440,0.2,"triangle");
+  setTimeout(()=>tone(660,0.2,"triangle"),200);
+  setTimeout(()=>tone(880,0.2,"triangle"),400);
+}
 function playStart(){ tone(600,0.12); tone(900,0.12); }
 
 function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
 function toggleSound(){ soundOn=!soundOn; soundBtn.textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
 
 function startTimer(){
-  timerInterval=setInterval(()=>{ timeElapsed++; document.getElementById("timer").textContent=timeElapsed; },1000);
+  timerInterval=setInterval(()=>{
+    timeElapsed++;
+    document.getElementById("timer").textContent=timeElapsed;
+  },1000);
 }
 
-// レベルボタン生成
+/* レベルボタン作成 */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=30;i++){
   const b=document.createElement("button");
@@ -160,7 +170,7 @@ function startGame(level){
       return {en:a, jp:b};
     }).sort(()=>Math.random()-0.5);
 
-    index=0; correct=0; timeElapsed=0;
+    index=0; correct=0; timeElapsed=0; wrongWords=[];
     showWord(); startTimer();
   });
 }
@@ -174,16 +184,39 @@ function showWord(){
 }
 
 function finishGame(){
-  clearInterval(timerInterval); playFinish();
-  game.style.display="none"; resultCard.style.display="block";
+  clearInterval(timerInterval);
+  playFinish();
+  game.style.display="none";
+  resultCard.style.display="block";
+
   const wpm=Math.round(correct/(timeElapsed/60));
   finalScore.textContent=`正解数：${correct} / 時間：${timeElapsed}秒 / WPM：${wpm}`;
+
+  // 🔁 復習ボタン（間違えた単語がある場合のみ）
+  if (wrongWords.length > 0) {
+    const retryBtn=document.createElement("button");
+    retryBtn.textContent="間違えた単語を復習";
+    retryBtn.onclick=retryWrongWords;
+    resultCard.appendChild(retryBtn);
+  }
 }
+
 function resetGame(){ location.reload(); }
 
+function retryWrongWords(){
+  words=[...wrongWords];
+  wrongWords=[];
+  index=0; correct=0; timeElapsed=0;
+  resultCard.style.display="none";
+  game.style.display="block";
+  showWord(); startTimer();
+}
+
+/* スマホフォーカス */
 document.addEventListener("touchstart",()=>input.focus());
 document.addEventListener("keydown",()=>{ if(document.activeElement!==input) input.focus(); });
 
+/* タイピング判定 */
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
   e.preventDefault();
@@ -195,6 +228,9 @@ input.addEventListener("keydown",e=>{
     currentPos++; wrongCount=0;
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     if(currentPos===cur.length){
+      // ✅ 間違えた単語を記録
+      if (wrongCount > 0) wrongWords.push(words[index]);
+
       correct++; playCorrect(); speak(cur);
       index++;
       setTimeout(showWord,1000);
