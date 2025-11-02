@@ -1,50 +1,25 @@
-﻿recognize,[動]わかる
-forget,[動]忘れる
-remember,[動]覚えている
-memory,記憶
-idea,考え
-opinion,意見
-advice,助言
-doubt,疑い
-sure,[形]確かな
-suppose,[動]思う
-real,[形]本当の
-fiction,虚構
-imagine,[動]想像する
-smart,[形]頭がいい
-creative,[形]創造的
-invent,[動]発明する
-zero,ゼロ
-figure,数字
-math,数学
-TRUE,[形]真の
-FALSE,[形]いつわりの
-guess,[動]推測する
-scientific,[形]科学的
-method,方法
-analysis,分析
-friend,友達
-party,パーティ
-bring,[動]連れてくる
-visit,[動]訪問する
-welcome,[動]歓迎する
-introduce,[動]紹介する
-guest,客
-invite,[動]招待する
-host,主人役
-group,集団
-member,一員
-join,[動]参加する
-meeting,会合
-regular,[形]定期的
-attend,[動]出席する
-teach,[動]教える
-explain,[動]説明する
-understand,[動]理解する
-study,勉強
-homework,宿題
-subject,科目
-examination,試験
-nervous,[形]あがった
-tension,緊張
-test,テスト
+﻿Canada,カナダ
+Europe,ヨーロッパ
+Africa,アフリカ
+Australia,オーストラリア
+Britain,英国
+English,英語 [形]イングランドの
+French,フランス語 [形]フランスの
+German,ドイツ語 [形]ドイツの
+Japanese,日本語 [形]日本の
+Chinese,中国語 [形]中国の
+Korean,韓国語 [形]韓国の
+Spanish,スペイン語 [形]スペインの
+Italian,イタリア語 [形]イタリアの
+Russian,ロシア語 [形]ロシアの
+American,[形]アメリカの
+Canadian,[形]カナダの
+European,[形]ヨーロッパの
+African,[形]アフリカの
+Australian,[形]オーストラリアの
+British,[形]英国の
+wet,[形]しめった
+dry,[形]乾いた
+steam,蒸気
+cold,[形]寒い
+hot,[形]暑い
