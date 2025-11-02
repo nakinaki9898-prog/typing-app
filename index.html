@@ -191,7 +191,7 @@ input.addEventListener("keydown",e=>{
     wordDiv.innerHTML=`<span style="color:#1976d2;">${current.slice(0,currentPos)}</span>`;
     if(currentPos===current.length){
       correct++; playCorrect(); speak(current);
-      index++; setTimeout(showWord,200);
+      index++; setTimeout(showWord,800);
     }
     return;
   }
