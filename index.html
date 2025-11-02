@@ -9,8 +9,8 @@ body{font-family:'Noto Sans JP',sans-serif;margin:0;display:flex;justify-content
 .card{background:rgba(255,255,255,0.92);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.15);padding:40px;text-align:center;width:90%;max-width:480px}
 h1{
   color:#1976d2;
-  font-family:'Noto Sans JP', sans-serif; /* ★ゴシック体へ変更 */
-  font-size:2.3em; /* ★サイズアップ */
+  font-family:'Noto Sans JP', sans-serif; /* ゴシックに変更 */
+  font-size:2.3em; /* サイズアップ */
   font-weight:700;
   margin-bottom:16px;
 }
@@ -40,7 +40,6 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
   <h1>英単語タイピング</h1>
 
   <div id="progress"></div>
-
   <div>経過時間: <span id="timer">0</span> 秒</div>
   <div id="jp"></div>
   <div id="word"></div>
@@ -48,7 +47,6 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
   <input id="input" readonly placeholder="ここに入力（キーボードでタイプ）">
 
   <button onclick="showAnswer()" style="background:#ff9800;margin-top:6px;">答えを見る</button>
-
   <div id="result"></div>
 
   <button id="soundBtn" onclick="toggleSound()">🔊 音 ON</button>
@@ -63,7 +61,9 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
 </div>
 
 <script>
-let words=[], index=0, correct=0, currentPos=0, wrongCount=0;
+let words=[], index=0, correct=0, currentPos=0;
+let wrongCount=0;          // 連続ミス（ヒント用）
+let mistakeCount=0;        // 合計ミス（復習判定用）
 let wrongWords=[], hintShown=false, answerShown=false;
 let soundOn=true, timeElapsed=0, timerInterval=null;
 
@@ -106,7 +106,7 @@ function showWord(){
   progress.textContent=`問題: ${index+1} / ${words.length}`;
   jpDiv.textContent=words[index].jp;
   wordDiv.textContent="";
-  currentPos=0; wrongCount=0; hintShown=false; answerShown=false;
+  currentPos=0; wrongCount=0; mistakeCount=0; hintShown=false; answerShown=false;
   input.value=""; input.focus();
 }
 
@@ -164,7 +164,7 @@ document.addEventListener("keydown",(e)=>{
     if(currentPos===cur.length){
 
       // ✅ 3回以上ミス or 答えを見た場合 → 復習対象
-      if(wrongCount >= 3 || hintShown){
+      if(mistakeCount >= 3 || hintShown){
         wrongWords.push(words[index]);
       }
 
@@ -175,6 +175,8 @@ document.addEventListener("keydown",(e)=>{
   }
 
   wrongCount++;
+  mistakeCount++; // ✅ 合計ミスカウント
+
   result.innerHTML="<span class='wrong'>ミス！</span>";
   setTimeout(()=>result.textContent="",300);
   playWrong();
@@ -190,5 +192,6 @@ document.addEventListener("click",()=>input.focus());
 document.addEventListener("touchstart",()=>input.focus());
 document.addEventListener("mousemove",()=>{ if(document.activeElement!==input) input.focus(); });
 </script>
+
 </body>
 </html>
