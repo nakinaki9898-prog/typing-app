@@ -6,16 +6,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
 <style>
 body{font-family:'Noto Sans JP',sans-serif;margin:0;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.card{background:rgba(255,255,255,0.92);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.15);padding:40px;text-align:center;width:90%;max-width:480px}
+.card{background:rgba(255,255,255,0.92);border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.15);padding:40px;text-align:center;width:90%;max-width:520px}
 h1{
   color:#1976d2;
   font-family:'Noto Sans JP',sans-serif;
-  font-size:2.3em;
+  font-size:2.4em;
   font-weight:700;
   margin-bottom:16px;
 }
-#levelButtons{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;max-height:60vh;overflow-y:auto;} /* スクロール対応 */
-.level-btn{background:#1976d2;color:#fff;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:1.1em}
+
+/* ★ 横10列でレベル配置 */
+#levelButtons{
+  display:grid;
+  grid-template-columns:repeat(10,1fr); 
+  gap:8px;
+  max-height:70vh;
+  overflow-y:auto;
+}
+
+.level-btn{
+  background:#1976d2;color:#fff;padding:10px;border-radius:10px;
+  border:none;cursor:pointer;font-size:1em
+}
 .level-btn:hover{background:#0d47a1}
 button{background:#1976d2;color:#fff;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;margin-top:8px}
 button:hover{background:#0d47a1}
@@ -65,8 +77,8 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
 
 <script>
 let words=[], index=0, correct=0, currentPos=0;
-let wrongCount=0;          // 連続ミス（ヒント用）
-let mistakeCount=0;        // 累計ミス（復習用）
+let wrongCount=0;          // 連続ミス数（ヒント用）
+let mistakeCount=0;        // 合計ミス（復習対象判定）
 let wrongWords=[], hintShown=false, answerShown=false;
 let soundOn=true, timeElapsed=0, timerInterval=null;
 
@@ -80,18 +92,18 @@ const resultActions=document.getElementById("resultActions");
 const progress=document.getElementById("progress");
 const timerSpan=document.getElementById("timer");
 
-/* 音声 */
+/* ===== 音 ===== */
 function tone(f=440,d=0.15,t="sine"){ if(!soundOn) return; const c=new(window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.type=t; o.frequency.value=f; g.gain.value=0.03; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); }
 function playWrong(){ tone(200,0.15,"square"); }
 function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2,"triangle"),200); setTimeout(()=>tone(880,0.2,"triangle"),400); }
 function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
 function toggleSound(){ soundOn=!soundOn; document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
 
-/* タイマー */
+/* ===== タイマー ===== */
 function startTimer(){ clearInterval(timerInterval); timeElapsed=0; timerSpan.textContent=timeElapsed; timerInterval=setInterval(()=>{ timeElapsed++; timerSpan.textContent=timeElapsed; },1000); }
 function stopTimer(){ clearInterval(timerInterval); }
 
-/* レベルボタン生成 1〜60 */
+/* ===== レベルボタン 1〜60 ===== */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=60;i++){
   const b=document.createElement("button");
@@ -101,7 +113,7 @@ for(let i=1;i<=60;i++){
   levelButtons.appendChild(b);
 }
 
-/* ゲーム開始 */
+/* ===== ゲーム開始 ===== */
 function startGame(level){
   menu.style.display="none"; game.style.display="block"; stopTimer();
   fetch(`words_level${level}.csv`).then(r=>r.text()).then(t=>{
@@ -111,10 +123,10 @@ function startGame(level){
     }).sort(()=>Math.random()-0.5);
     index=0; correct=0; wrongWords=[];
     showWord(); startTimer();
-  }).catch(()=>alert("CSV読み込みエラー（words_level" + level + ".csv）"));
+  }).catch(()=>alert("CSV読み込みエラー: words_level"+level+".csv"));
 }
 
-/* 単語表示 */
+/* ===== 単語表示 ===== */
 function showWord(){
   if(index>=words.length){ finishGame(); return; }
   progress.textContent=`問題: ${index+1} / ${words.length}`;
@@ -124,19 +136,19 @@ function showWord(){
   input.value=""; input.focus();
 }
 
-/* 答え表示 */
+/* ===== 答え表示 ===== */
 function showAnswer(){
   const cur=words[index].en;
   wordDiv.innerHTML=`<span style="color:#1976d2">${cur}</span>`;
   hintShown=true; answerShown=true; speak(cur);
 }
 
-/* 終了 */
+/* ===== 終了 ===== */
 function finishGame(){
   stopTimer(); playFinish();
   game.style.display="none"; resultCard.style.display="block";
   const total=words.length;
-  const wpm=Math.max(0,Math.round(correct/(Math.max(1,timeElapsed)/60)));
+  const wpm=Math.round(correct/(Math.max(1,timeElapsed)/60));
   document.getElementById("finalScore").textContent=`時間：${timeElapsed}秒 / WPM：${wpm}`;
   document.getElementById("summaryScore").textContent=`正解：${correct} / ${total}問`;
 
@@ -149,7 +161,7 @@ function finishGame(){
   }
 }
 
-/* 復習モード */
+/* ===== 復習 ===== */
 function retryWrongWords(){
   words=[...wrongWords];
   wrongWords=[]; index=0; correct=0;
@@ -159,7 +171,7 @@ function retryWrongWords(){
 
 function resetGame(){ location.reload(); }
 
-/* キー入力 */
+/* ===== 入力処理 ===== */
 document.addEventListener("keydown",(e)=>{
   if(game.style.display==="none") return;
   const key=e.key;
@@ -179,19 +191,19 @@ document.addEventListener("keydown",(e)=>{
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     if(currentPos===cur.length){
 
-      /* ✅ 3回以上ミス or 答えを見る → 復習対象 */
+      // ✅ ミス3回以上 or 答えを見たら復習
       if(mistakeCount >= 3 || hintShown){
         wrongWords.push(words[index]);
       }
 
       correct++; speak(cur);
-      index++; setTimeout(showWord,1000);
+      index++; setTimeout(showWord,800);
     }
     return;
   }
 
   wrongCount++;
-  mistakeCount++; // ✅累計ミス
+  mistakeCount++; // ★累計ミス
 
   result.innerHTML="<span class='wrong'>ミス！</span>";
   setTimeout(()=>result.textContent="",300);
@@ -204,7 +216,7 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 
-/* フォーカス維持 */
+/* ===== フォーカス維持 ===== */
 document.addEventListener("click",()=>input.focus());
 document.addEventListener("touchstart",()=>input.focus());
 document.addEventListener("mousemove",()=>{ if(document.activeElement!==input) input.focus(); });
