@@ -24,25 +24,21 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
 </head>
 <body id="bg">
 
-<!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
 
-<!-- ゲーム -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
 
-  <!-- 問題進捗 -->
   <div id="progress"></div>
 
   <div>経過時間: <span id="timer">0</span> 秒</div>
   <div id="jp"></div>
   <div id="word"></div>
 
-  <!-- 入力欄は表示用（readonly）。キー入力はdocumentで取得 -->
   <input id="input" readonly placeholder="ここに入力（キーボードでタイプ）">
 
   <button onclick="showAnswer()" style="background:#ff9800;margin-top:6px;">答えを見る</button>
@@ -53,7 +49,6 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
   <button onclick="resetGame()">リセット</button>
 </div>
 
-<!-- 結果 -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
@@ -62,12 +57,10 @@ input{width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-rad
 </div>
 
 <script>
-/* ====== 状態 ====== */
 let words=[], index=0, correct=0, currentPos=0, wrongCount=0;
 let wrongWords=[], hintShown=false, answerShown=false;
 let soundOn=true, timeElapsed=0, timerInterval=null;
 
-/* ====== 要素 ====== */
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
@@ -78,23 +71,18 @@ const resultActions=document.getElementById("resultActions");
 const progress=document.getElementById("progress");
 const timerSpan=document.getElementById("timer");
 
-/* ====== 効果音 ====== */
 function tone(f=440,d=0.15,t="sine"){ if(!soundOn) return; const c=new(window.AudioContext||window.webkitAudioContext)(); const o=c.createOscillator(), g=c.createGain(); o.type=t; o.frequency.value=f; g.gain.value=0.03; o.connect(g); g.connect(c.destination); o.start(); o.stop(c.currentTime+d); }
-function playCorrect(){ tone(880,0.12); tone(1100,0.12); }
 function playWrong(){ tone(200,0.15,"square"); }
 function playFinish(){ tone(440,0.2,"triangle"); setTimeout(()=>tone(660,0.2,"triangle"),200); setTimeout(()=>tone(880,0.2,"triangle"),400); }
 function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
 function toggleSound(){ soundOn=!soundOn; document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
 
-/* ====== タイマー ====== */
 function startTimer(){ clearInterval(timerInterval); timeElapsed=0; timerSpan.textContent=timeElapsed; timerInterval=setInterval(()=>{ timeElapsed++; timerSpan.textContent=timeElapsed; },1000); }
 function stopTimer(){ clearInterval(timerInterval); }
 
-/* ====== レベルボタン ====== */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=30;i++){ const b=document.createElement("button"); b.textContent=i; b.className="level-btn"; b.onclick=()=>startGame(i); levelButtons.appendChild(b); }
 
-/* ====== ゲーム開始 ====== */
 function startGame(level){
   menu.style.display="none"; game.style.display="block"; stopTimer();
   fetch(`words_level${level}.csv`).then(r=>r.text()).then(t=>{
@@ -107,7 +95,6 @@ function startGame(level){
   }).catch(()=>alert("CSV読み込みエラー"));
 }
 
-/* ====== 単語表示 ====== */
 function showWord(){
   if(index>=words.length){ finishGame(); return; }
   progress.textContent=`問題: ${index+1} / ${words.length}`;
@@ -117,16 +104,14 @@ function showWord(){
   input.value=""; input.focus();
 }
 
-/* ====== 答えを見る ====== */
 function showAnswer(){
   const cur=words[index].en;
   wordDiv.innerHTML=`<span style="color:#1976d2">${cur}</span>`;
-  hintShown=true;          // 復習対象に入れるため
-  answerShown=true;        // 次のタイプで表示を消す
+  hintShown=true;
+  answerShown=true;
   speak(cur);
 }
 
-/* ====== 終了 ====== */
 function finishGame(){
   stopTimer(); playFinish();
   game.style.display="none"; resultCard.style.display="block";
@@ -135,7 +120,6 @@ function finishGame(){
   document.getElementById("finalScore").textContent=`時間：${timeElapsed}秒 / WPM：${wpm}`;
   document.getElementById("summaryScore").textContent=`正解：${correct} / ${total}問`;
 
-  // 結果画面のボタン生成（重複防止のため初期化）
   resultActions.innerHTML='<button onclick="location.reload()">メニューへ</button>';
   if(wrongWords.length>0){
     const retry=document.createElement("button");
@@ -145,7 +129,6 @@ function finishGame(){
   }
 }
 
-/* ====== 復習モード ====== */
 function retryWrongWords(){
   words=[...wrongWords];
   wrongWords=[]; index=0; correct=0;
@@ -153,15 +136,13 @@ function retryWrongWords(){
   startTimer(); showWord();
 }
 
-/* ====== リセット ====== */
 function resetGame(){ location.reload(); }
 
-/* ====== 入力処理（画面全体で受ける） ====== */
 document.addEventListener("keydown",(e)=>{
-  if(game.style.display==="none") return;     // ゲーム中のみ
+  if(game.style.display==="none") return;
   const key=e.key;
-  if(key.length!==1) return;                  // 文字以外は無視
-  e.preventDefault();                         // inputに入らないように
+  if(key.length!==1) return;
+  e.preventDefault();
 
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
@@ -169,28 +150,29 @@ document.addEventListener("keydown",(e)=>{
   const typed=key.toLowerCase();
   const need=cur[currentPos].toLowerCase();
 
-  // 「答えを見る」直後の最初のタイプで表示を消す
   if(answerShown){ answerShown=false; wordDiv.textContent=""; }
 
   if(typed===need){
     currentPos++; wrongCount=0;
     wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     if(currentPos===cur.length){
-      // ✅ 一度でもミス or 答えを見た単語は復習対象に保存
-      if(wrongCount>0 || hintShown){ wrongWords.push(words[index]); }
+
+      // ✅ 3回以上ミス or 答えを見た場合 → 復習対象
+      if(wrongCount >= 3 || hintShown){
+        wrongWords.push(words[index]);
+      }
 
       correct++; speak(cur);
-      index++; setTimeout(showWord,1000);  // 正解後 1 秒見せる
+      index++; setTimeout(showWord,1000);
     }
     return;
   }
 
-  // ミス
-  wrongCount++; result.innerHTML="<span class='wrong'>ミス！</span>";
+  wrongCount++;
+  result.innerHTML="<span class='wrong'>ミス！</span>";
   setTimeout(()=>result.textContent="",300);
   playWrong();
 
-  // 3回以上で1文字ヒント
   if(wrongCount>=3){
     wordDiv.innerHTML=
       `<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`+
@@ -198,7 +180,6 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 
-/* ====== フォーカス維持 ====== */
 document.addEventListener("click",()=>input.focus());
 document.addEventListener("touchstart",()=>input.focus());
 document.addEventListener("mousemove",()=>{ if(document.activeElement!==input) input.focus(); });
