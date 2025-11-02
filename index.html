@@ -80,7 +80,7 @@ function tone(freq = 440, duration = 0.15, type = "sine", volume = 0.15) {
 
   osc.type = type;
   osc.frequency.value = freq;
-  gain.gain.value = 0.03; // ★ とても静か
+  gain.gain.value = 0.06; // ★ 静か
 
   osc.connect(gain);
   gain.connect(ctx.destination);
