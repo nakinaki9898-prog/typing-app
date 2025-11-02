@@ -226,8 +226,7 @@ function retryWrongWords(){
 
 function resetGame(){ location.reload(); }
 
-document.addEvent
-Listener("keydown",(e)=>{
+document.addEventListener("keydown",(e)=>{
   if(game.style.display==="none") return;
   const key=e.key;
   if(key.length!==1) return;
