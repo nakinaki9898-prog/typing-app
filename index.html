@@ -14,20 +14,22 @@ body {
 .card {
   background: white; border-radius: 20px;
   box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-  padding: 40px; text-align: center;
-  width: 90%; max-width: 500px;
+  padding: 40px; text-align: center; width: 90%; max-width: 500px;
 }
 h1 { color:#1976d2; margin-bottom:20px; }
 button {
-  background:#1976d2; color:white; border:none;
-  padding:10px 25px; border-radius:10px; cursor:pointer; margin:5px;
+  background:#1976d2; color:white; border:none; padding:10px 25px;
+  border-radius:10px; cursor:pointer; margin:5px; font-size:1em;
 }
 button:hover { background:#0d47a1; }
+select {
+  font-size:1.2em; padding:8px; border-radius:10px; border:2px solid #90caf9;
+  margin-bottom:20px; width:80%;
+}
 #jp { font-size:1.5em; margin:15px 0; }
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
 input {
-  width:80%; padding:10px; font-size:1.2em;
-  border:2px solid #90caf9; border-radius:10px;
+  width:80%; padding:10px; font-size:1.2em; border:2px solid #90caf9; border-radius:10px;
 }
 #result { font-size:1.2em; height:40px; }
 .wrong{color:red;font-weight:bold;}
@@ -38,14 +40,14 @@ input {
 <!-- LEVEL SELECT -->
 <div class="card" id="menu">
   <h1>レベル選択</h1>
-  <button onclick="startGame(1)">LEVEL 1</button>
-  <button onclick="startGame(2)">LEVEL 2</button>
-  <button onclick="startGame(3)">LEVEL 3</button>
-  <button onclick="startGame(4)">LEVEL 4</button>
-  <button onclick="startGame(5)">LEVEL 5</button>
+  <select id="levelSelect">
+    <option value="" disabled selected>レベルを選んでください</option>
+  </select>
+  <br><br>
+  <button onclick="startSelectedLevel()">スタート</button>
 </div>
 
-<!-- GAME SCREEN -->
+<!-- GAME -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
   <div>経過時間: <span id="timer">0</span> 秒</div>
@@ -57,7 +59,7 @@ input {
   <button onclick="resetGame()">リセット</button>
 </div>
 
-<!-- RESULT SCREEN -->
+<!-- RESULT -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
@@ -65,37 +67,46 @@ input {
 </div>
 
 <script>
+// ------------------ SETTINGS ------------------ //
 let words = [], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
 let timeElapsed = 0, timerInterval;
+
 const jpDiv = document.getElementById("jp");
 const wordDiv = document.getElementById("word");
 const input = document.getElementById("input");
 const result = document.getElementById("result");
 
-function tone(freq = 440, duration = 0.15, type = "sine", volume = 0.15) {
+// Generate level options 1-30
+const levelSelect = document.getElementById("levelSelect");
+for (let i = 1; i <= 30; i++) {
+  const opt = document.createElement("option");
+  opt.value = i;
+  opt.textContent = `LEVEL ${i}`;
+  levelSelect.appendChild(opt);
+}
+
+// ------------------ SOUND ENGINE ------------------ //
+function tone(freq = 440, duration = 0.15, type = "sine") {
   if(!soundOn) return;
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
-
   osc.type = type;
   osc.frequency.value = freq;
-  gain.gain.value = 0.06; // ★ 静か
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.start();
-  osc.stop(ctx.currentTime + duration);
+  gain.gain.value = 0.03; // ★ 超静音設定
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(); osc.stop(ctx.currentTime + duration);
 }
-function playCorrect(){ tone(880,0.12,"sine"); tone(1100,0.12,"sine"); }
-function playWrong(){ tone(200,0.12,"square"); }
+
+function playCorrect(){ tone(880,0.12); tone(1100,0.12); }
+function playWrong(){ tone(200,0.15,"square"); }
 function playFinish(){
   tone(440,0.2,"triangle");
   setTimeout(()=>tone(660,0.2,"triangle"),200);
   setTimeout(()=>tone(880,0.2,"triangle"),400);
 }
 
+// Speech
 function speak(text){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US"; speechSynthesis.speak(u);
@@ -106,11 +117,19 @@ function toggleSound(){
   document.getElementById("soundBtn").textContent = soundOn ? "🔊 音 ON" : "🔇 音 OFF";
 }
 
+// ------------------ TIMER ------------------ //
 function startTimer(){
   timerInterval = setInterval(()=>{
     timeElapsed++;
     document.getElementById("timer").textContent = timeElapsed;
   },1000);
+}
+
+// ------------------ GAME FLOW ------------------ //
+function startSelectedLevel(){
+  const level = levelSelect.value;
+  if(!level) return alert("レベルを選択してください！");
+  startGame(level);
 }
 
 function startGame(level){
@@ -125,10 +144,9 @@ function startGame(level){
         const [en,jp] = l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
         return {en,jp};
       }).sort(()=>Math.random()-0.5);
-
-      showWord();
-      startTimer();
-    });
+      showWord(); startTimer();
+    })
+    .catch(()=> alert("CSV読み込みエラーがあります"));
 }
 
 function showWord(){
@@ -145,7 +163,6 @@ function finishGame(){
   playFinish();
   document.getElementById("game").style.display="none";
   document.getElementById("resultCard").style.display="block";
-
   const wpm = Math.round(correct / (timeElapsed/60));
   document.getElementById("finalScore").textContent =
     `正解数：${correct}語 / 時間：${timeElapsed}秒 / WPM：${wpm}`;
@@ -153,9 +170,7 @@ function finishGame(){
 
 function resetGame(){ location.reload(); }
 
-document.addEventListener("keydown",e=>{
-  if(document.activeElement !== input) input.focus();
-});
+document.addEventListener("keydown",e=>{ if(document.activeElement !== input) input.focus(); });
 
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
@@ -166,10 +181,7 @@ input.addEventListener("keydown",e=>{
 
   if(e.key===correctChar){
     currentPos++; wrongCount=0;
-
-    const typed=current.slice(0,currentPos);
-    wordDiv.innerHTML=`<span style="color:#1976d2;">${typed}</span>`;
-
+    wordDiv.innerHTML=`<span style="color:#1976d2;">${current.slice(0,currentPos)}</span>`;
     if(currentPos===current.length){
       correct++; playCorrect(); speak(current);
       index++; setTimeout(showWord,200);
@@ -178,17 +190,15 @@ input.addEventListener("keydown",e=>{
   }
 
   wrongCount++; result.innerHTML="<span class='wrong'>ミス！</span>";
-  setTimeout(()=>result.textContent="",300);
-  playWrong();
+  setTimeout(()=>result.textContent="",300); playWrong();
 
   if(wrongCount>=3){
-    const correctPart=current.slice(0,currentPos);
-    const hintChar=correctChar;
     wordDiv.innerHTML=
-      `<span style="color:#1976d2;">${correctPart}</span>`+
-      `<span style="color:red;">${hintChar}</span>`;
+      `<span style="color:#1976d2;">${current.slice(0,currentPos)}</span>`+
+      `<span style="color:red;">${correctChar}</span>`;
   }
 });
 </script>
+
 </body>
 </html>
