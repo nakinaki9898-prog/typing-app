@@ -22,10 +22,6 @@ button {
   border-radius:10px; cursor:pointer; margin:5px; font-size:1em;
 }
 button:hover { background:#0d47a1; }
-select {
-  font-size:1.2em; padding:8px; border-radius:10px; border:2px solid #90caf9;
-  margin-bottom:20px; width:80%;
-}
 #jp { font-size:1.5em; margin:15px 0; }
 #word { font-size:2em; min-height:60px; margin-bottom:10px; }
 input {
@@ -33,6 +29,21 @@ input {
 }
 #result { font-size:1.2em; height:40px; }
 .wrong{color:red;font-weight:bold;}
+
+/* ★ レベルボタンの5列グリッド */
+#levelButtons {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 20px;
+}
+.level-btn {
+  background:#1976d2; color:white; border:none;
+  padding:10px; border-radius:10px; cursor:pointer; font-size:1.1em;
+}
+.level-btn:hover {
+  background:#0d47a1;
+}
 </style>
 </head>
 <body>
@@ -40,11 +51,7 @@ input {
 <!-- LEVEL SELECT -->
 <div class="card" id="menu">
   <h1>レベル選択</h1>
-  <select id="levelSelect">
-    <option value="" disabled selected>レベルを選んでください</option>
-  </select>
-  <br><br>
-  <button onclick="startSelectedLevel()">スタート</button>
+  <div id="levelButtons"></div>
 </div>
 
 <!-- GAME -->
@@ -67,7 +74,6 @@ input {
 </div>
 
 <script>
-// ------------------ SETTINGS ------------------ //
 let words = [], index=0, correct=0, currentPos=0, wrongCount=0, soundOn=true;
 let timeElapsed = 0, timerInterval;
 
@@ -76,16 +82,7 @@ const wordDiv = document.getElementById("word");
 const input = document.getElementById("input");
 const result = document.getElementById("result");
 
-// Generate level options 1-30
-const levelSelect = document.getElementById("levelSelect");
-for (let i = 1; i <= 30; i++) {
-  const opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = `LEVEL ${i}`;
-  levelSelect.appendChild(opt);
-}
-
-// ------------------ SOUND ENGINE ------------------ //
+/* ★ Web Audioで静かな効果音 */
 function tone(freq = 440, duration = 0.15, type = "sine") {
   if(!soundOn) return;
   const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -93,7 +90,7 @@ function tone(freq = 440, duration = 0.15, type = "sine") {
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.value = freq;
-  gain.gain.value = 0.03; // ★ 超静音設定
+  gain.gain.value = 0.03; /* ← さらに小さい音量 */
   osc.connect(gain); gain.connect(ctx.destination);
   osc.start(); osc.stop(ctx.currentTime + duration);
 }
@@ -106,18 +103,19 @@ function playFinish(){
   setTimeout(()=>tone(880,0.2,"triangle"),400);
 }
 
-// Speech
+/* 発音 */
 function speak(text){
   const u = new SpeechSynthesisUtterance(text);
   u.lang = "en-US"; speechSynthesis.speak(u);
 }
 
+/* 音ON/OFF */
 function toggleSound(){
   soundOn = !soundOn;
   document.getElementById("soundBtn").textContent = soundOn ? "🔊 音 ON" : "🔇 音 OFF";
 }
 
-// ------------------ TIMER ------------------ //
+/* タイマー */
 function startTimer(){
   timerInterval = setInterval(()=>{
     timeElapsed++;
@@ -125,13 +123,17 @@ function startTimer(){
   },1000);
 }
 
-// ------------------ GAME FLOW ------------------ //
-function startSelectedLevel(){
-  const level = levelSelect.value;
-  if(!level) return alert("レベルを選択してください！");
-  startGame(level);
+/* レベル1〜30ボタン生成 */
+const levelButtons = document.getElementById("levelButtons");
+for (let i = 1; i <= 30; i++) {
+  const btn = document.createElement("button");
+  btn.textContent = i;
+  btn.className = "level-btn";
+  btn.onclick = () => startGame(i);
+  levelButtons.appendChild(btn);
 }
 
+/* ゲーム開始 */
 function startGame(level){
   document.getElementById("menu").style.display="none";
   document.getElementById("game").style.display="block";
@@ -149,6 +151,7 @@ function startGame(level){
     .catch(()=> alert("CSV読み込みエラーがあります"));
 }
 
+/* 単語表示 */
 function showWord(){
   if(index>=words.length){ finishGame(); return; }
   const {en,jp} = words[index];
@@ -158,6 +161,7 @@ function showWord(){
   input.focus();
 }
 
+/* 終了 */
 function finishGame(){
   clearInterval(timerInterval);
   playFinish();
@@ -168,10 +172,13 @@ function finishGame(){
     `正解数：${correct}語 / 時間：${timeElapsed}秒 / WPM：${wpm}`;
 }
 
+/* リセット */
 function resetGame(){ location.reload(); }
 
+/* 自動フォーカス保持 */
 document.addEventListener("keydown",e=>{ if(document.activeElement !== input) input.focus(); });
 
+/* タイピング処理 */
 input.addEventListener("keydown",e=>{
   if(e.key.length!==1) return;
   e.preventDefault();
