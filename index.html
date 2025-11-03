@@ -250,8 +250,8 @@ function finishGame(){
 
   resultActions.innerHTML='<button onclick="location.reload()">メニューへ</button>';
 
-  /* ★ 全問正解なら緑記録 */
-  if(!isPracticeMode && displayCorrect === total){
+  /* ✅復習0のときだけ緑クリア */
+  if(!isPracticeMode && wrongWords.length === 0){
     let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
     if(!clearedLevels.includes(currentLevel)){
       clearedLevels.push(currentLevel);
