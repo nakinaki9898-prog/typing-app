@@ -109,6 +109,8 @@ let wrongWords=[],hintShown=false,answerShown=false;
 let soundOn=true,timeElapsed=0,timerInterval=null;
 let isPracticeMode=false,currentLevel=1,originalTotal=25;
 
+let usedReview = false; // ✅復習を使ったかどうか記録
+
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
@@ -120,7 +122,7 @@ const timerSpan=document.getElementById("timer");
 const btnAnswer=document.getElementById("btnAnswer");
 const radioPractice=document.getElementById("practiceMode");
 
-/* ====== ビープ音 ====== */
+/* ====== 音 ====== */
 function tone(f=440,d=0.15,t="sine"){
   if(!soundOn) return;
   const c=new(window.AudioContext||window.webkitAudioContext)();
@@ -141,7 +143,7 @@ function toggleSound(){
   document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF";
 }
 
-/* ====== タイプ音「コッ」 ====== */
+/* タイプ音「コッ」 */
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 function clickKo(){
   if(!soundOn) return;
@@ -162,7 +164,7 @@ function clickKo(){
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000);}
 function stopTimer(){clearInterval(timerInterval);}
 
-/* ====== クリア数表示 ====== */
+/* ✅クリア数表示 */
 function updateClearProgress(){
   let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
   document.getElementById("clearProgress").textContent =
@@ -170,7 +172,7 @@ function updateClearProgress(){
 }
 updateClearProgress();
 
-/* ====== レベルボタン生成 ====== */
+/* レベルボタン生成 */
 const levelContainer = document.getElementById("levelButtons");
 let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
 
@@ -182,12 +184,11 @@ for(let i=1;i<=60;i++){
   levelContainer.appendChild(b);
 }
 
-/* ====== クリア履歴リセット ====== */
+/* クリア履歴リセット */
 document.getElementById("resetClear").onclick = () => {
-  if(!confirm("クリア履歴をリセットしますか？\n（緑色のレベルが元に戻ります）")) return;
+  if(!confirm("クリア履歴をリセットしますか？")) return;
   localStorage.removeItem("clearedLevels");
-  const buttons=document.querySelectorAll("#levelButtons button");
-  buttons.forEach(btn=>btn.classList.remove("level-cleared"));
+  document.querySelectorAll("#levelButtons button").forEach(btn=>btn.classList.remove("level-cleared"));
   updateClearProgress();
   alert("クリア履歴をリセットしました！");
 };
@@ -196,6 +197,8 @@ document.getElementById("resetClear").onclick = () => {
 function startGame(level){
   currentLevel=level;
   isPracticeMode=radioPractice.checked;
+  usedReview = false; // ✅新規プレイ時リセット
+
   menu.style.display="none";game.style.display="block";
   btnAnswer.style.display=isPracticeMode?"none":"inline-block";
   stopTimer();
@@ -250,15 +253,14 @@ function finishGame(){
 
   resultActions.innerHTML='<button onclick="location.reload()">メニューへ</button>';
 
-  /* ✅復習0のときだけ緑クリア */
-  if(!isPracticeMode && wrongWords.length === 0){
+  /* ✅一発合格のみ緑にする */
+  if(!isPracticeMode && wrongWords.length === 0 && !usedReview){
     let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
     if(!clearedLevels.includes(currentLevel)){
       clearedLevels.push(currentLevel);
       localStorage.setItem("clearedLevels", JSON.stringify(clearedLevels));
     }
-    const buttons=document.querySelectorAll("#levelButtons button");
-    buttons[currentLevel-1].classList.add("level-cleared");
+    document.querySelectorAll("#levelButtons button")[currentLevel-1].classList.add("level-cleared");
     updateClearProgress();
   }
 
@@ -283,11 +285,13 @@ function finishGame(){
 
 /* 復習 */
 function retryWrongWords(){
+  usedReview = true; // ✅復習使用記録
   words=[...wrongWords];wrongWords=[];
   index=0;correct=0;
   resultCard.style.display="none";game.style.display="block";
   startTimer();showWord();
 }
+
 function resetGame(){location.reload();}
 
 /* 入力処理 */
