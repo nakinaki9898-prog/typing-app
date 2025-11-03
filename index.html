@@ -173,6 +173,7 @@ function startGame(level){
 /* 単語表示 */
 function showWord(){
   if(index>=words.length){finishGame();return;}
+  progress.textContent = `問題：${index + 1} / ${originalTotal}`;
   const cur=words[index].en;
   jpDiv.textContent=words[index].jp;
   currentPos=0;wrongCount=0;mistakeCount=0;hintShown=false;answerShown=false;
