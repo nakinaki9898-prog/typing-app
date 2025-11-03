@@ -25,7 +25,7 @@ body{
   text-align:center;
 }
 
-/* スマホ縦画面対応 */
+/* スマホ最適化 */
 @media (max-width:600px){
   .card{padding:16px;}
   h1{font-size:1.7em;}
@@ -40,31 +40,6 @@ body{
 .level-btn:hover{background:#0d47a1}
 .level-cleared{background:#4caf50!important}
 
-/* === 画面下キーボード === */
-#keyboard{
-  display:grid;
-  grid-template-columns:repeat(10,1fr);
-  gap:6px;
-  padding:10px;
-  position:fixed;
-  bottom:0;left:0;right:0;
-  background:#e3f2fd;
-  border-top:2px solid #90caf9;
-  z-index:100;
-}
-.key{
-  background:#1976d2;color:white;border:none;
-  padding:10px;
-  border-radius:6px;
-  font-size:1.1em;
-  text-align:center;
-}
-.key:active{background:#0d47a1}
-
-/* 入力エリアを下にずらす */
-#game{padding-bottom:130px}
-
-/* 入力欄 */
 #input{
   width:90%;padding:10px;font-size:1.2em;
   border:2px solid #90caf9;border-radius:10px;
@@ -108,9 +83,6 @@ body{
   <div id="resultActions"></div>
 </div>
 
-<!-- ▼ ソフトキーボード -->
-<div id="keyboard"></div>
-
 <script>
 let words=[],index=0,currentPos=0;
 let wrongWords=[],hintShown=false,answerShown=false;
@@ -122,22 +94,6 @@ const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
 
-/* ▼ スマホ画面下キーボード生成 */
-const keyboard=document.getElementById("keyboard");
-"QWERTYUIOPASDFGHJKLZXCVBNM".split('').forEach(k=>{
-  const btn=document.createElement("button");
-  btn.textContent=k;btn.className="key";
-  btn.onclick=()=> simulateKey(k);
-  keyboard.appendChild(btn);
-});
-
-/* キー入力シミュレーション */
-function simulateKey(ch){
-  input.focus();
-  document.dispatchEvent(new KeyboardEvent("keydown",{key:ch}));
-}
-
-/* 入力フォーカス時に画面調整 */
 input.addEventListener("focus",()=>{
   setTimeout(()=>window.scrollTo(0,0),200);
 });
@@ -203,7 +159,6 @@ function showAnswer(){
   answerShown=true;
 }
 
-/* 終了処理 */
 function finishGame(){
   stopTimer();
   document.getElementById("game").style.display="none";
@@ -224,16 +179,6 @@ function finishGame(){
       localStorage.setItem("clearedLevels",JSON.stringify(c));
     }
   }
-}
-
-/* 復習 */
-function retryWrong(){
-  usedReview=true;
-  words=[...wrongWords];wrongWords=[];
-  index=0;
-  document.getElementById("resultCard").style.display="none";
-  document.getElementById("game").style.display="block";
-  startTimer();showWord();
 }
 
 document.addEventListener("keydown",e=>{
