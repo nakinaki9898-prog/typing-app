@@ -90,7 +90,7 @@ const practiceCheck=document.getElementById("practiceCheck");
 const btnAnswer=document.getElementById("btnAnswer");
 
 /* ====== 音 ====== */
-function tone(f=440,d=0.15,t="sine"){if(!soundOn)return;const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.value=0.03;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d);}
+function tone(f=440,d=0.15,t="sine"){if(!soundOn)return;const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.type=t;o.frequency.value=f;g.gain.value=0.12;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+d);}
 function playWrong(){tone(200,0.15,"square");}
 function playFinish(){tone(440,0.2,"triangle");setTimeout(()=>tone(660,0.2,"triangle"),200);setTimeout(()=>tone(880,0.2,"triangle"),400);}
 function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u);}
