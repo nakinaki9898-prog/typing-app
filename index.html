@@ -10,11 +10,21 @@ body{
   margin:0;display:flex;justify-content:center;align-items:center;
   min-height:100vh;
 
-  /* ✅ にぎやかな学習背景 */
-  background-color:#e9f4ff;
-  background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='5' y='20' font-size='18' fill='%23a6c8ff'%3Eabc%3C/text%3E%3Ctext x='60' y='40' font-size='18' fill='%23ffb3c6'%3E%E2%9C%8F%EF%B8%8F%3C/text%3E%3Ctext x='20' y='60' font-size='20' fill='%23ffd700'%3E%E2%AD%90%3C/text%3E%3Ctext x='70' y='85' font-size='18' fill='%23b0e57c'%3E%F0%9F%93%9A%3C/text%3E%3Ctext x='35' y='90' font-size='18' fill='%23ffa94d'%3E%F0%9F%92%A1%3C/text%3E%3C/svg%3E");
-  background-size:120px;
-  background-repeat:repeat;
+  /* 🌿 落ち着いた背景：淡いブルーのグラデーション＋ボケ */
+  background: linear-gradient(135deg, #dcebfd, #f7fcff);
+  background-attachment: fixed;
+}
+body::before{
+  content:"";
+  position:fixed;
+  top:0;left:0;width:100vw;height:100vh;
+  pointer-events:none;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 40%),
+    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%),
+    radial-gradient(circle at 50% 90%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 45%);
+  filter: blur(20px);
+  z-index:-1;
 }
 
 .card{
@@ -33,7 +43,7 @@ h1{
   margin-bottom:16px;
 }
 
-/* ✅ レベルボタン10列 */
+/* レベルボタン */
 #levelButtons{
   display:grid;
   grid-template-columns:repeat(10,1fr);
@@ -56,7 +66,7 @@ input{
   caret-color:transparent;user-select:none;
 }
 
-/* 練習モード単語中央 */
+/* 単語表示 */
 #word{
   font-size:2.6em;
   min-height:100px;
@@ -83,7 +93,6 @@ input{
 </head>
 <body>
 
-<!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
 
@@ -96,7 +105,6 @@ input{
   <div id="levelButtons"></div>
 </div>
 
-<!-- ゲーム -->
 <div class="card" id="game" style="display:none;">
   <h1>英単語タイピング</h1>
   <div id="progress"></div>
@@ -104,7 +112,7 @@ input{
   <div id="jp"></div>
   <div id="word"></div>
 
-  <input id="input" readonly placeholder="ここに入力（キーボードでタイプ）">
+  <input id="input" readonly placeholder="ここに入力">
   <button onclick="showAnswer()" id="btnAnswer" style="background:#ff9800;margin-top:6px;">答えを見る</button>
 
   <div id="result"></div>
@@ -112,7 +120,6 @@ input{
   <button onclick="resetGame()">リセット</button>
 </div>
 
-<!-- 結果 -->
 <div class="card" id="resultCard" style="display:none;">
   <h1>結果</h1>
   <p id="finalScore"></p>
@@ -138,7 +145,7 @@ const timerSpan=document.getElementById("timer");
 const practiceCheck=document.getElementById("practiceCheck");
 const btnAnswer=document.getElementById("btnAnswer");
 
-/* ✅ カチッ音 */
+/* クリック音（カチッ） */
 let audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 function clickSound(){
   if(!soundOn) return;
@@ -152,18 +159,18 @@ function clickSound(){
   noise.connect(gain);gain.connect(audioCtx.destination);
   noise.start();
 }
-function playWrong(){clickSound();} // ミス時もカチッ音
+function playWrong(){clickSound();}
 
 function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u)}
 function toggleSound(){soundOn=!soundOn;document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"}
+
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000)}
 function stopTimer(){clearInterval(timerInterval)}
 
-const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=60;i++){
   const b=document.createElement("button");
   b.textContent=i;b.className="level-btn";b.onclick=()=>startGame(i);
-  levelButtons.appendChild(b);
+  document.getElementById("levelButtons").appendChild(b);
 }
 
 function startGame(level){
@@ -179,7 +186,7 @@ function startGame(level){
     }).sort(()=>Math.random()-0.5);
     index=0;correct=0;wrongWords=[];
     showWord();startTimer();
-  }).catch(()=>alert(`words_level${level}.csv が見つかりません`));
+  });
 }
 
 function showWord(){
@@ -191,7 +198,7 @@ function showWord(){
 
   if(isPracticeMode){
     wordDiv.innerHTML=`<div style="color:red;width:100%;text-align:center;">${cur}</div>`;
-  }else wordDiv.textContent="";
+  } else wordDiv.textContent="";
 }
 
 function showAnswer(){
@@ -218,7 +225,7 @@ function finishGame(){
       startGame(currentLevel);
     };
     resultActions.appendChild(goTest);
-  }else if(wrongWords.length>0){
+  } else if(wrongWords.length>0){
     const retry=document.createElement("button");
     retry.textContent="間違えた単語を復習";
     retry.onclick=retryWrongWords;
@@ -233,11 +240,10 @@ function retryWrongWords(){
 }
 function resetGame(){location.reload()}
 
-/* キー入力 */
 document.addEventListener("keydown",(e)=>{
   if(game.style.display==="none") return;
   const key=e.key;if(key.length!==1) return;
-  e.preventDefault();clickSound(); 
+  e.preventDefault();clickSound();
 
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
@@ -251,7 +257,7 @@ document.addEventListener("keydown",(e)=>{
       const t1=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
       const t2=`<span style="color:red">${cur.slice(currentPos)}</span>`;
       wordDiv.innerHTML=`<div style="width:100%;text-align:center;">${t1}${t2}</div>`;
-    }else{
+    } else {
       wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     }
     if(currentPos===cur.length){
