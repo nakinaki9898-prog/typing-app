@@ -152,20 +152,30 @@ function playFinish(){
 function speak(t){ const u=new SpeechSynthesisUtterance(t); u.lang="en-US"; speechSynthesis.speak(u); }
 function toggleSound(){ soundOn=!soundOn; document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"; }
 
-/* ✅ 「カッ」入力音 */
+/* ✅ 「カッ」入力音（音量アップ版） */
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function clickKa(){
   if(!soundOn) return;
-  const dur = 0.05;
+  const dur = 0.06;
   const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * dur, audioCtx.sampleRate);
   const data = buffer.getChannelData(0);
+  
+  // ホワイトノイズ + 強めの減衰で「カッ」
   for (let i = 0; i < data.length; i++){
-    const env = Math.exp(-20 * i / data.length);
-    data[i] = (Math.random()*2-1) * env;
+    const env = Math.exp(-12 * i / data.length); // ← 少し緩やかに
+    data[i] = (Math.random() * 2 - 1) * env;
   }
-  const src = audioCtx.createBufferSource(); src.buffer = buffer;
-  const gain = audioCtx.createGain(); gain.gain.value = 0.4;
-  src.connect(gain); gain.connect(audioCtx.destination); src.start();
+  
+  const src = audioCtx.createBufferSource();
+  src.buffer = buffer;
+  const gain = audioCtx.createGain();
+
+  /* ✅ 音量アップ（0.4 → 1.0） */
+  gain.gain.value = 1.0;
+
+  src.connect(gain);
+  gain.connect(audioCtx.destination);
+  src.start();
 }
 
 /* ====== タイマー ====== */
