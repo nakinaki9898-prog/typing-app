@@ -26,7 +26,7 @@ h1{
   margin-bottom:16px;
 }
 
-/* ✅ レベルボタン 10列 */
+/* ✅ レベルボタン10列 */
 #levelButtons{
   display:grid;
   grid-template-columns:repeat(10,1fr);
@@ -51,16 +51,17 @@ input{
   caret-color:transparent;user-select:none;
 }
 
-/* ✅ 中央に大きく */
+/* ✅ 練習モード文字を縦横中央＆大きく */
 #word{
   font-size:2.6em;
-  min-height:80px;
+  min-height:100px;
   margin-bottom:10px;
   display:flex;
   justify-content:center;
   align-items:center;
   text-align:center;
   width:100%;
+  line-height:1.2;
 }
 
 #jp{font-size:1.5em;margin:15px 0}
@@ -75,12 +76,9 @@ input{
 <!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
-
-  <!-- ✅ モード選択 -->
   <div class="modeSelect">
     <label><input type="checkbox" id="practiceCheck"> 練習モード</label>
   </div>
-
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
 </div>
@@ -111,14 +109,12 @@ input{
 </div>
 
 <script>
-/* ===== 状態 ===== */
 let words=[],index=0,correct=0,currentPos=0;
 let wrongCount=0,mistakeCount=0;
 let wrongWords=[],hintShown=false,answerShown=false;
 let soundOn=true,timeElapsed=0,timerInterval=null;
 let isPracticeMode=false;
 
-/* ===== HTML要素 ===== */
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
@@ -131,26 +127,25 @@ const timerSpan=document.getElementById("timer");
 const practiceCheck=document.getElementById("practiceCheck");
 const btnAnswer=document.getElementById("btnAnswer");
 
-/* ===== 音 ===== */
+/* ✅ 入力音アップ */
 function tone(f=440,d=0.15,t="sine"){
   if(!soundOn) return;
   const c=new(window.AudioContext||window.webkitAudioContext)();
   const o=c.createOscillator(),g=c.createGain();
   o.type=t; o.frequency.value=f;
-  g.gain.value=0.12; /* ✅音アップ */
+  g.gain.value=0.12;
   o.connect(g);g.connect(c.destination);
   o.start();o.stop(c.currentTime+d);
 }
-function playWrong(){tone(200,0.15,"square")}
-function playFinish(){tone(440,0.2,"triangle");setTimeout(()=>tone(660,0.2,"triangle"),200);setTimeout(()=>tone(880,0.2,"triangle"),400)}
+const playWrong=()=>tone(200,0.15,"square");
+function playFinish(){tone(440,0.2,"triangle");setTimeout(()=>tone(660),200);setTimeout(()=>tone(880),400);}
 function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u)}
 function toggleSound(){soundOn=!soundOn;document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"}
 
-/* ===== タイマー ===== */
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerSpan.textContent=timeElapsed;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000)}
 function stopTimer(){clearInterval(timerInterval)}
 
-/* ===== レベルボタン生成 ===== */
+/* レベル 1〜60 */
 const levelButtons=document.getElementById("levelButtons");
 for(let i=1;i<=60;i++){
   const b=document.createElement("button");
@@ -159,7 +154,7 @@ for(let i=1;i<=60;i++){
   levelButtons.appendChild(b);
 }
 
-/* ===== ゲーム開始 ===== */
+/* ゲーム開始 */
 function startGame(level){
   isPracticeMode = practiceCheck.checked;
   menu.style.display="none";game.style.display="block";stopTimer();
@@ -170,30 +165,32 @@ function startGame(level){
       const [en,jp]=l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
       return {en,jp};
     }).sort(()=>Math.random()-0.5);
+
     index=0;correct=0;wrongWords=[];
     showWord();startTimer();
-  }).catch(()=>alert("words_level"+level+".csv が見つかりません"));
+  }).catch(()=>alert(`words_level${level}.csv が見つかりません`));
 }
 
-/* ===== 単語表示 ===== */
+/* 単語を表示 */
 function showWord(){
   if(index>=words.length){finishGame();return;}
 
   const cur=words[index].en;
   progress.textContent=`問題: ${index+1} / ${words.length}`;
   jpDiv.textContent=words[index].jp;
+
   currentPos=0;wrongCount=0;mistakeCount=0;hintShown=false;answerShown=false;
   input.value="";input.focus();
 
   if(isPracticeMode){
-    wordDiv.innerHTML=
-      `<span style="color:red;display:inline-block;width:100%;text-align:center;">${cur}</span>`;
+    wordDiv.innerHTML =
+      `<div style="color:red;width:100%;text-align:center;">${cur}</div>`;
   } else {
     wordDiv.textContent="";
   }
 }
 
-/* ===== 答え ===== */
+/* 答え */
 function showAnswer(){
   if(isPracticeMode) return;
   const cur=words[index].en;
@@ -201,7 +198,7 @@ function showAnswer(){
   hintShown=true;answerShown=true;speak(cur);
 }
 
-/* ===== 完了 ===== */
+/* 終了 */
 function finishGame(){
   stopTimer();playFinish();
   game.style.display="none";resultCard.style.display="block";
@@ -219,16 +216,15 @@ function finishGame(){
   }
 }
 
-/* ===== 復習 ===== */
+/* 復習 */
 function retryWrongWords(){
-  words=[...wrongWords];
-  wrongWords=[];index=0;correct=0;
+  words=[...wrongWords];wrongWords=[];index=0;correct=0;
   resultCard.style.display="none";game.style.display="block";
   startTimer();showWord();
 }
 function resetGame(){location.reload()}
 
-/* ===== 入力 ===== */
+/* 入力処理 */
 document.addEventListener("keydown",(e)=>{
   if(game.style.display==="none") return;
   const key=e.key;if(key.length!==1) return;
@@ -236,8 +232,8 @@ document.addEventListener("keydown",(e)=>{
 
   const cur=words[index].en;
   if(currentPos>=cur.length) return;
-  const typed=key.toLowerCase(),need=cur[currentPos].toLowerCase();
 
+  const typed=key.toLowerCase(),need=cur[currentPos].toLowerCase();
   if(answerShown){answerShown=false;wordDiv.textContent=""}
 
   /* ✅ 正解 */
@@ -247,14 +243,15 @@ document.addEventListener("keydown",(e)=>{
     if(isPracticeMode){
       const correctPart=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
       const remainPart=`<span style="color:red">${cur.slice(currentPos)}</span>`;
-      wordDiv.innerHTML=
-        `<span style="display:inline-block;width:100%;text-align:center;">${correctPart}${remainPart}</span>`;
+      wordDiv.innerHTML =
+        `<div style="width:100%;text-align:center;">${correctPart}${remainPart}</div>`;
     } else {
       wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     }
 
     if(currentPos===cur.length){
-      if(!isPracticeMode && (mistakeCount>=3||hintShown)) wrongWords.push(words[index]);
+      if(!isPracticeMode && (mistakeCount>=3 || hintShown))
+        wrongWords.push(words[index]);
       correct++;speak(cur);
       index++;setTimeout(showWord,800);
     }
@@ -273,9 +270,10 @@ document.addEventListener("keydown",(e)=>{
   }
 });
 
-/* ===== フォーカス維持 ===== */
+/* 入力フォーカス維持 */
 document.addEventListener("click",()=>input.focus());
 document.addEventListener("touchstart",()=>input.focus());
 </script>
+
 </body>
 </html>
