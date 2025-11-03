@@ -32,6 +32,10 @@ h1{
   background:#1976d2;color:#fff;padding:10px;border-radius:10px;border:none;cursor:pointer;font-size:1em;
 }
 .level-btn:hover{background:#0d47a1}
+.level-cleared{
+  background:#4caf50!important;
+  color:#fff;font-weight:bold;
+}
 button{
   background:#1976d2;color:#fff;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;margin-top:8px;
 }
@@ -61,6 +65,8 @@ input{
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
 
+  <p id="clearProgress" style="font-weight:bold;color:#2e7d32;margin-bottom:10px;"></p>
+
   <div class="modeSelect">
     <label><input type="radio" name="mode" id="testMode" checked> テストモード</label>
     <label><input type="radio" name="mode" id="practiceMode"> 練習モード</label>
@@ -68,6 +74,8 @@ input{
 
   <h2>レベル選択</h2>
   <div id="levelButtons"></div>
+
+  <button id="resetClear" style="margin-top:15px;background:#888">クリア履歴リセット</button>
 </div>
 
 <!-- ゲーム -->
@@ -101,7 +109,6 @@ let wrongWords=[],hintShown=false,answerShown=false;
 let soundOn=true,timeElapsed=0,timerInterval=null;
 let isPracticeMode=false,currentLevel=1,originalTotal=25;
 
-/* DOM */
 const jpDiv=document.getElementById("jp");
 const wordDiv=document.getElementById("word");
 const input=document.getElementById("input");
@@ -151,16 +158,39 @@ function clickKo(){
   src.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);src.start();
 }
 
-/* ====== タイマー ====== */
+/* タイマー */
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000);}
 function stopTimer(){clearInterval(timerInterval);}
 
-/* レベルボタン生成 */
+/* ====== クリア数表示 ====== */
+function updateClearProgress(){
+  let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
+  document.getElementById("clearProgress").textContent =
+    `✅ クリア：${clearedLevels.length} / 60レベル`;
+}
+updateClearProgress();
+
+/* ====== レベルボタン生成 ====== */
+const levelContainer = document.getElementById("levelButtons");
+let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
+
 for(let i=1;i<=60;i++){
   const b=document.createElement("button");
-  b.textContent=i;b.className="level-btn";b.onclick=()=>startGame(i);
-  document.getElementById("levelButtons").appendChild(b);
+  b.textContent=i;b.className="level-btn";
+  if(clearedLevels.includes(i)) b.classList.add("level-cleared");
+  b.onclick=()=>startGame(i);
+  levelContainer.appendChild(b);
 }
+
+/* ====== クリア履歴リセット ====== */
+document.getElementById("resetClear").onclick = () => {
+  if(!confirm("クリア履歴をリセットしますか？\n（緑色のレベルが元に戻ります）")) return;
+  localStorage.removeItem("clearedLevels");
+  const buttons=document.querySelectorAll("#levelButtons button");
+  buttons.forEach(btn=>btn.classList.remove("level-cleared"));
+  updateClearProgress();
+  alert("クリア履歴をリセットしました！");
+};
 
 /* ゲーム開始 */
 function startGame(level){
@@ -220,6 +250,19 @@ function finishGame(){
 
   resultActions.innerHTML='<button onclick="location.reload()">メニューへ</button>';
 
+  /* ★ 全問正解なら緑記録 */
+  if(!isPracticeMode && displayCorrect === total){
+    let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
+    if(!clearedLevels.includes(currentLevel)){
+      clearedLevels.push(currentLevel);
+      localStorage.setItem("clearedLevels", JSON.stringify(clearedLevels));
+    }
+    const buttons=document.querySelectorAll("#levelButtons button");
+    buttons[currentLevel-1].classList.add("level-cleared");
+    updateClearProgress();
+  }
+
+  /* 練習→テストへ */
   if(isPracticeMode){
     const goTest=document.createElement("button");
     goTest.textContent="同じレベルでテストに挑戦";
