@@ -10,21 +10,14 @@ body{
   margin:0;display:flex;justify-content:center;align-items:center;
   min-height:100vh;
 
-  /* 🌿 落ち着いた背景：淡いブルーのグラデーション＋ボケ */
-  background: linear-gradient(135deg, #dcebfd, #f7fcff);
-  background-attachment: fixed;
-}
-body::before{
-  content:"";
-  position:fixed;
-  top:0;left:0;width:100vw;height:100vh;
-  pointer-events:none;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 40%),
-    radial-gradient(circle at 80% 70%, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 50%),
-    radial-gradient(circle at 50% 90%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 45%);
-  filter: blur(20px);
-  z-index:-1;
+  /* ✅ うっすらABC背景（落ち着き・学習風） */
+  background-color: #f4f9ff;
+  background-image: 
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Ctext x='5' y='30' font-size='24' fill='%23bcd0e7' font-family='Arial'%3EABC%3C/text%3E%3Ctext x='60' y='80' font-size='22' fill='%23c8d9f0' font-family='Arial'%3Eabc%3C/text%3E%3C/svg%3E");
+  background-size: 40px 40px, 40px 40px, 120px 120px;
+  background-position: 0 0, 0 0, 0 0;
 }
 
 .card{
@@ -45,9 +38,7 @@ h1{
 
 /* レベルボタン */
 #levelButtons{
-  display:grid;
-  grid-template-columns:repeat(10,1fr);
-  gap:8px;
+  display:grid;grid-template-columns:repeat(10,1fr);gap:8px;
 }
 .level-btn{
   background:#1976d2;color:#fff;padding:10px;border-radius:10px;
@@ -62,21 +53,15 @@ button{
 button:hover{background:#0d47a1}
 
 input{
-  width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;border-radius:10px;
-  caret-color:transparent;user-select:none;
+  width:80%;padding:10px;font-size:1.2em;border:2px solid #90caf9;
+  border-radius:10px;caret-color:transparent;user-select:none;
 }
 
-/* 単語表示 */
+/* 単語 */
 #word{
-  font-size:2.6em;
-  min-height:100px;
-  margin-bottom:10px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  width:100%;
-  line-height:1.2;
+  font-size:2.6em;min-height:100px;margin-bottom:10px;
+  display:flex;justify-content:center;align-items:center;text-align:center;
+  width:100%;line-height:1.2;
 }
 
 #jp{font-size:1.5em;margin:15px 0}
@@ -85,14 +70,15 @@ input{
 #progress{font-size:1.2em;margin-bottom:10px;color:#333;font-weight:bold}
 
 .modeSelect{
-  font-size:1.1em;margin-bottom:10px;
-  display:flex;justify-content:center;align-items:center;gap:8px;
+  font-size:1.1em;margin-bottom:10px;display:flex;
+  justify-content:center;align-items:center;gap:8px;
 }
 .modeSelect input{width:auto!important;}
 </style>
 </head>
 <body>
 
+<!-- ▼▼▼ UI 以下、前のまま（省略せずそのまま） ▼▼▼ -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
 
@@ -128,6 +114,7 @@ input{
 </div>
 
 <script>
+/* === 省略せず、すべて同じ（クリック音/練習/テスト機能など前回のまま） === */
 let words=[],index=0,correct=0,currentPos=0;
 let wrongCount=0,mistakeCount=0;
 let wrongWords=[],hintShown=false,answerShown=false;
@@ -145,7 +132,7 @@ const timerSpan=document.getElementById("timer");
 const practiceCheck=document.getElementById("practiceCheck");
 const btnAnswer=document.getElementById("btnAnswer");
 
-/* クリック音（カチッ） */
+/* クリック音 */
 let audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 function clickSound(){
   if(!soundOn) return;
@@ -160,10 +147,8 @@ function clickSound(){
   noise.start();
 }
 function playWrong(){clickSound();}
-
 function speak(t){const u=new SpeechSynthesisUtterance(t);u.lang="en-US";speechSynthesis.speak(u)}
 function toggleSound(){soundOn=!soundOn;document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF"}
-
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000)}
 function stopTimer(){clearInterval(timerInterval)}
 
