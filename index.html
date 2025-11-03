@@ -1,5 +1,3 @@
-
-あなた:
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -170,7 +168,7 @@ function stopTimer(){clearInterval(timerInterval);}
 function updateClearProgress(){
   let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
   document.getElementById("clearProgress").textContent =
-    ✅ クリア：${clearedLevels.length} / 60レベル;
+    `✅ クリア：${clearedLevels.length} / 60レベル`;
 }
 updateClearProgress();
 
@@ -205,7 +203,7 @@ function startGame(level){
   btnAnswer.style.display=isPracticeMode?"none":"inline-block";
   stopTimer();
 
-  fetch(words_level${level}.csv).then(r=>r.text()).then(t=>{
+  fetch(`words_level${level}.csv`).then(r=>r.text()).then(t=>{
     words=t.trim().split("\n").map(l=>{
       const [en,jp]=l.split(",").map(s=>s.replace(/^['"]|['"]$/g,"").trim());
       return {en,jp};
@@ -221,7 +219,7 @@ function startGame(level){
 function showWord(){
   if(index>=words.length){finishGame();return;}
 
-  document.getElementById("progress").textContent = 問題：${index+1} / ${originalTotal};
+  document.getElementById("progress").textContent = `問題：${index+1} / ${originalTotal}`;
 
   const cur=words[index].en;
   jpDiv.textContent=words[index].jp;
@@ -229,7 +227,7 @@ function showWord(){
   input.value="";input.focus();
 
   if(isPracticeMode){
-    wordDiv.innerHTML=<div style="color:red;">${cur}</div>;
+    wordDiv.innerHTML=`<div style="color:red;">${cur}</div>`;
   } else wordDiv.textContent="";
 }
 
@@ -237,7 +235,7 @@ function showWord(){
 function showAnswer(){
   if(isPracticeMode) return;
   const cur=words[index].en;
-  wordDiv.innerHTML=<span style="color:#1976d2">${cur}</span>;
+  wordDiv.innerHTML=`<span style="color:#1976d2">${cur}</span>`;
   hintShown=true;answerShown=true;speak(cur);
 }
 
@@ -250,8 +248,8 @@ function finishGame(){
   const total=originalTotal;
   const displayCorrect=Math.max(0,total-reviewCount);
 
-  document.getElementById("finalScore").textContent=時間：${timeElapsed}秒;
-  document.getElementById("summaryScore").textContent=正解：${displayCorrect} / ${total}問;
+  document.getElementById("finalScore").textContent=`時間：${timeElapsed}秒`;
+  document.getElementById("summaryScore").textContent=`正解：${displayCorrect} / ${total}問`;
 
   resultActions.innerHTML='<button onclick="location.reload()">メニューへ</button>';
 
@@ -312,11 +310,11 @@ document.addEventListener("keydown",(e)=>{
   if(typed===need){
     currentPos++;wrongCount=0;
     if(isPracticeMode){
-      const t1=<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>;
-      const t2=<span style="color:red">${cur.slice(currentPos)}</span>;
+      const t1=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
+      const t2=`<span style="color:red">${cur.slice(currentPos)}</span>`;
       wordDiv.innerHTML=t1+t2;
     }else{
-      wordDiv.innerHTML=<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>;
+      wordDiv.innerHTML=`<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`;
     }
 
     if(currentPos===cur.length){
@@ -329,13 +327,13 @@ document.addEventListener("keydown",(e)=>{
   }
 
   wrongCount++;mistakeCount++;playWrong();
-  result.innerHTML=<span class='wrong'>ミス！</span>;
+  result.innerHTML=`<span class='wrong'>ミス！</span>`;
   setTimeout(()=>result.textContent="",300);
 
   if(!isPracticeMode && wrongCount>=3){
     wordDiv.innerHTML=
-      <span style="color:#1976d2">${cur.slice(0,currentPos)}</span>+
-      <span style="color:red">${cur[currentPos]}</span>;
+      `<span style="color:#1976d2">${cur.slice(0,currentPos)}</span>`+
+      `<span style="color:red">${cur[currentPos]}</span>`;
   }
 });
 
