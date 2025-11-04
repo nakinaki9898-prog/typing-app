@@ -2,29 +2,8 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-
-<!-- ✅ SEO タイトル / 説明 -->
-<title>中学生 英単語タイピング道場｜無料で英単語練習＆テスト</title>
-<meta name="description" content="中学生向け英単語タイピング練習アプリ。無料で英単語を練習＆テスト。高校受験対策、定期テスト準備に最適。音声読み上げ・復習機能付き。">
-
-<!-- ✅ キーワード -->
-<meta name="keywords" content="英単語, タイピング, 中学生, 英語学習, 高校受験, 英単語テスト, 無料学習ゲーム, 英単語アプリ">
-
-<!-- ✅ スマホ対応 -->
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- ✅ SNS共有 OGP設定 -->
-<meta property="og:title" content="中学生 英単語タイピング道場｜無料英単語トレーニング">
-<meta property="og:description" content="中学生向け英単語タイピング練習アプリ。無料で英単語練習＆テスト、復習機能付き！">
-<meta property="og:type" content="website">
-<meta property="og:image" content="https://your-site.example.com/ogp.png">
-<meta property="og:url" content="https://your-site.example.com">
-
-<!-- ✅ Twitterカード -->
-<meta name="twitter:card" content="summary_large_image">
-
+<title>英単語タイピング（中学生）</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
-
 <style>
 body{
   font-family:'Noto Sans JP',sans-serif;
@@ -82,13 +61,10 @@ input{
 </head>
 <body>
 
-<p style="text-align:center;max-width:500px;margin:10px auto;color:#333;font-size:14px;">
-中学生向け英単語タイピング練習サイト。英語テスト対策・高校受験対策に最適。
-</p>
-
 <!-- メニュー -->
 <div class="card" id="menu">
   <h1>英単語タイピング（中学生）</h1>
+
   <p id="clearProgress" style="font-weight:bold;color:#2e7d32;margin-bottom:10px;"></p>
 
   <!-- ✅ 練習モードを左＆デフォルトON -->
@@ -129,7 +105,7 @@ input{
 
 <script>
 /****************************************
- JS（あなたの元コードそのまま）
+ JS（あなたの元コードそのまま、変更済）
 ****************************************/
 let words=[],index=0,correct=0,currentPos=0;
 let wrongCount=0,mistakeCount=0;
@@ -149,6 +125,7 @@ const timerSpan=document.getElementById("timer");
 const btnAnswer=document.getElementById("btnAnswer");
 const radioPractice=document.getElementById("practiceMode");
 
+/* 音関連 */
 function tone(f=440,d=0.15,t="sine"){
   if(!soundOn) return;
   const c=new(window.AudioContext||window.webkitAudioContext)();
@@ -169,6 +146,7 @@ function toggleSound(){
   document.getElementById("soundBtn").textContent=soundOn?"🔊 音 ON":"🔇 音 OFF";
 }
 
+/* タイピング音 */
 const audioCtx=new(window.AudioContext||window.webkitAudioContext)();
 function clickKo(){
   if(!soundOn) return;
@@ -185,15 +163,18 @@ function clickKo(){
   src.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);src.start();
 }
 
+/* タイマー */
 function startTimer(){clearInterval(timerInterval);timeElapsed=0;timerInterval=setInterval(()=>{timeElapsed++;timerSpan.textContent=timeElapsed},1000);}
 function stopTimer(){clearInterval(timerInterval);}
 
+/* ✅クリア数表示 */
 function updateClearProgress(){
   let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
   document.getElementById("clearProgress").textContent =`✅ クリア：${clearedLevels.length} / 60レベル`;
 }
 updateClearProgress();
 
+/* レベルボタン生成 */
 const levelContainer = document.getElementById("levelButtons");
 let clearedLevels = JSON.parse(localStorage.getItem("clearedLevels") || "[]");
 
@@ -205,6 +186,7 @@ for(let i=1;i<=60;i++){
   levelContainer.appendChild(b);
 }
 
+/* クリア履歴リセット */
 document.getElementById("resetClear").onclick = () => {
   if(!confirm("クリア履歴をリセットしますか？")) return;
   localStorage.removeItem("clearedLevels");
@@ -213,6 +195,7 @@ document.getElementById("resetClear").onclick = () => {
   alert("クリア履歴をリセットしました！");
 };
 
+/* ゲーム開始 */
 function startGame(level){
   currentLevel=level;
   isPracticeMode=radioPractice.checked;
@@ -234,6 +217,7 @@ function startGame(level){
   });
 }
 
+/* 単語表示 */
 function showWord(){
   if(index>=words.length){finishGame();return;}
   document.getElementById("progress").textContent = `問題：${index+1} / ${originalTotal}`;
@@ -247,6 +231,7 @@ function showWord(){
   } else wordDiv.textContent="";
 }
 
+/* 答え */
 function showAnswer(){
   if(isPracticeMode) return;
   const cur=words[index].en;
@@ -254,6 +239,7 @@ function showAnswer(){
   hintShown=true;answerShown=true;speak(cur);
 }
 
+/* 結果 */
 function finishGame(){
   stopTimer();playFinish();
   game.style.display="none";resultCard.style.display="block";
@@ -295,6 +281,7 @@ function finishGame(){
   }
 }
 
+/* 復習 */
 function retryWrongWords(){
   usedReview = true;
   words=[...wrongWords];wrongWords=[];
@@ -305,6 +292,7 @@ function retryWrongWords(){
 
 function resetGame(){location.reload();}
 
+/* 入力処理 */
 document.addEventListener("keydown",(e)=>{
   if(game.style.display==="none") return;
   if(e.key.length!==1) return;
